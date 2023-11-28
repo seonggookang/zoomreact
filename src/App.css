@@ -2,37 +2,63 @@
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.displayNone {
+  display: none;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.displayFlex {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.flexPaddingTop5 {
+  display: flex;
+  padding-top: 5px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.fontSize {
+  font-size: 16px;
+}
+
+.borderGapColor {
+  border: 2px;
+  border-color: blueviolet;
+}
+
+.myInfo,
+.roomsList {
+  padding: 5px 5px;
+  width: 50%;
+  border: 1px solid #999;
+}
+
+.roomNameNumber {
+  font-size: 0.6em;
+  font-weight: bold;
+}
+
+.videos {
+  margin-left: 15px;
+}
+
+.remotes {
+  display: flex;
+  justify-content: safe center;
+  overflow-x: auto;
+}
+
+.screen {
+  text-align: center;
+}
+
+.videoFrame {
+  width: 60px;
+}
+
+.myMessage {
+  font-size: 0.7rem;
+  color: #ff6600;
+}
+
+.myInput {
+  width: 100%;
 }
