@@ -73,25 +73,13 @@ function App() {
         data: configureData,
         _id: getId(),
       });
-    } else if (mode === 'audio') {
-      // 오디오를 끄는 것이면,
-      if ($('#audioset').hasClass('btn-primary')) {
-        $('#audioset').removeClass('btn-primary').addClass('btn-warning');
+    }
+    if (mode === 'audio') {
+      if ($('#audioBtn').hasClass('audioOn')) {
+        $('#audioBtn').removeClass('audioOn').addClass('audioOff');
 
         console.log('오디오 끄기');
-        // localStream이 인식되기도 전에 사용하려고 하니까 null error.
         const audioTrack = localStream.getAudioTracks()[0];
-
-        // if (audioTrack) {
-        //   const isAudioEnabled = audioTrack.enabled;
-        //   if (isAudioEnabled) {
-        //     audioTrack.enabled = false;
-        //     console.log('오디오를 끔');
-        //   } else {
-        //     audioTrack.enabled = true;
-        //     console.log('오디오를 켬');
-        //   }
-        // }
 
         if (audioTrack) {
           const isAudioEnabled = audioTrack.enabled;
@@ -100,9 +88,6 @@ function App() {
           console.log('오디오 트랙을 찾을 수 없습니다.');
         }
       } else {
-        // 오디오를 켜는 것이면,
-        $('#audioset').removeClass('btn-warning').addClass('btn-primary');
-
         console.log('오디오 켜기');
         const audioTrack = localStream.getAudioTracks()[0]; // 이걸 딱 누른순간,  $(document).on('click', '.audioOn, .audioOff', function () { 이게 없는 상황
 
@@ -113,10 +98,11 @@ function App() {
           console.log('오디오 트랙을 찾을 수 없습니다.');
         }
       }
-    } else {
+    }
+    if (mode === 'video') {
       //비디오를 끄는 것이면
-      if ($('#videoset').hasClass('btn-primary')) {
-        $('#videoset').removeClass('btn-primary').addClass('btn-warning');
+      if ($('#videoBtn').hasClass('videoOn')) {
+        $('#videoBtn').removeClass('videoOn').addClass('videoOff');
 
         console.log('비디오 끄기');
         // 미디어 스트림에서 비디오 트랙을 가져옵니다.
