@@ -23,7 +23,7 @@ function App() {
   const randName = 'John_Doe_' + Math.floor(10000 * Math.random());
   const myName = getURLParameter('name') || randName;
   const [localStream, setLocalStream] = useState(null);
-
+  const localVideoRef = useRef(null);
   const [socket, setSocket] = useState(io('https://janusc.wizbase.co.kr:4443', { autoConnect: false }));
 
   const [isModalVisible, setIsModalVisible] = useState(true);
@@ -45,7 +45,7 @@ function App() {
 
   ////////////////////////////////////////////////////////////////////////
   $(document).on('click', '.audioOn, .audioOff', function () {
-    configure_bitrate_audio_video('audio');
+    configure_bitrate_audio_video('audio'); // 이게 null 인거구나..
   });
   $(document).on('click', '.videoOn, .videoOff', function () {
     configure_bitrate_audio_video('video');
@@ -104,7 +104,7 @@ function App() {
         $('#audioset').removeClass('btn-warning').addClass('btn-primary');
 
         console.log('오디오 켜기');
-        const audioTrack = localStream.getAudioTracks()[0]; // localSgtream이 null인상황.
+        const audioTrack = localStream.getAudioTracks()[0]; // 이걸 딱 누른순간,  $(document).on('click', '.audioOn, .audioOff', function () { 이게 없는 상황
 
         if (audioTrack) {
           const isAudioEnabled = audioTrack.enabled;
@@ -718,7 +718,6 @@ function App() {
     localStream,
     setLocalStream,
     socket,
-    setSocket,
     getDateTime,
     getId,
     _listRooms,
