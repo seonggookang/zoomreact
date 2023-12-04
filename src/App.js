@@ -232,14 +232,10 @@ function App() {
     const videoContainerId = `video_${feed}`;
     const existingVideoContainer = document.getElementById(videoContainerId);
     if (!existingVideoContainer) {
-      // feed는 있지만, video_feed는 null. -->> 아예 이런 id값이 없으니 항상 참!
       const nameElem = document.createElement('div');
       nameElem.innerHTML = display;
-      // nameElem.innerHTML = display + ' (' + feed + ')';
       nameElem.style.display = 'table';
       nameElem.style.cssText = 'color: #fff; font-size: 0.8rem;';
-
-      // const nameElem = <div style={{ display: 'table', color: '#fff', fontSize: '0.8rem' }}>{display}</div>;
 
       if (localStream) {
         console.log('localStream!!!!!!!!!!!', localStream); // 잘나오는중
@@ -252,24 +248,6 @@ function App() {
         localVideoStreamElem.classList.add('localVideoTag');
         localVideoStreamElem.style.cssText = '-moz-transform: scale(-1, 1); -webkit-transform: scale(-1, 1); -o-transform: scale(-1, 1); transform: scale(-1, 1); filter: FlipH;';
         localVideoStreamElem.srcObject = localStream;
-
-        // const localVideoStreamElem = (
-        //   <video
-        //     width={160}
-        //     height={120}
-        //     autoPlay
-        //     muted
-        //     className="localVideoTag"
-        //     style={{
-        //       '-moz-transform': 'scale(-1, 1)',
-        //       '-webkit-transform': 'scale(-1, 1)',
-        //       '-o-transform': 'scale(-1, 1)',
-        //       transform: 'scale(-1, 1)',
-        //       filter: 'FlipH',
-        //     }}
-        //     srcObject={localStream}
-        //   />
-        // );
 
         const localVideoContainer = document.createElement('div');
         localVideoContainer.id = 'video_' + feed;
@@ -289,15 +267,6 @@ function App() {
 
         localVideoContainer.appendChild(localAudioOnOffElem);
         localVideoContainer.appendChild(localVideoOnOffElem);
-
-        // const localVideoContainer = (
-        //   <div id={videoContainerId} className="video-view" style={{ position: 'relative' }}>
-        //     {nameElem}
-        //     {localVideoStreamElem}
-        //     <img id="audioBtn" className="audioOn" />
-        //     <img id="videoBtn" className="videoOn" />
-        //   </div>
-        // );
 
         document.getElementById('local').appendChild(localVideoContainer);
       }
