@@ -2,6 +2,10 @@
   text-align: center;
 }
 
+.row {
+  display: flex;
+}
+
 .displayNone {
   display: none;
 }
@@ -10,18 +14,13 @@
   display: flex;
 }
 
-.flexPaddingTop5 {
+.myInfoStyle {
   display: flex;
   padding-top: 5px;
 }
 
 .fontSize {
   font-size: 16px;
-}
-
-.borderGapColor {
-  border: 2px;
-  border-color: blueviolet;
 }
 
 .myInfo,
@@ -36,16 +35,11 @@
   font-weight: bold;
 }
 
-.videos {
-  margin-left: 15px;
-}
-
 .remotes {
   display: flex;
   justify-content: safe center;
   overflow-x: auto;
 }
-
 .screen {
   text-align: center;
 }
@@ -61,4 +55,52 @@
 
 .myInput {
   width: 100%;
+}
+
+.btn_between {
+  justify-content: space-between;
+  margin-right: 0px;
+}
+.video-view {
+  padding: 0 5px 0 5px;
+}
+
+.video-view .video {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-color: #ccc;
+}
+.video-view .audioOn {
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  cursor: pointer;
+  width: 30%;
+  content: url('/image/ui_btn_audioOn.png');
+}
+.video-view .audioOff {
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  cursor: pointer;
+  width: 30%;
+  content: url('/image/ui_btn_audioOff.png');
+}
+.video-view .videoOn {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  cursor: pointer;
+  width: 30%;
+  content: url('/image/ui_btn_videoOn.png');
+}
+.video-view .videoOff {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  cursor: pointer;
+  width: 30%;
+  content: url('/image/ui_btn_videoOff.png');
 }

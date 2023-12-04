@@ -4,18 +4,24 @@ import AppContext from './Appcontext';
 import $ from 'jquery';
 
 const ModalComponent = () => {
-  const [isModalVisible, setIsModalVisible] = useState(true);
-  const { displayName, setDisplayName, handleDisplayNameChange } = useContext(AppContext);
+  const { displayName, setDisplayName, handleDisplayNameChange, setIsModalVisible, socket, _listRooms, join } = useContext(AppContext);
 
   const hideModal = () => {
     setIsModalVisible(false);
   };
 
-  const enterAction = () => {
+  const enterAction = (event) => {
+    event.preventDefault();
+
     if (!displayName) {
       alert('이름을 입력해야 합니다.');
     } else {
       hideModal(false);
+      if (socket && !socket.connected) {
+        socket.connect(); // 이걸 useEffect 안에다가?
+      } else {
+        alert('already connected!');
+      }
     }
   };
 
@@ -27,7 +33,7 @@ const ModalComponent = () => {
     setDisplayName(randomNumber2);
   }, []);
 
-  return isModalVisible ? (
+  return (
     <form onSubmit={enterAction}>
       <div className="modal modal-dialog modal-dialog-centered" tabIndex="-1" role="dialog">
         <div className="modal-dialog" role="document">
@@ -40,7 +46,7 @@ const ModalComponent = () => {
               <input type="text" className="myInput" placeholder="참석할 이름" value={displayName} onChange={handleDisplayNameChange} />
             </div>
             <div className="modal-footer">
-              <button type="button" id="enterRoom" className="btn btn-primary" onClick={enterAction}>
+              <button type="submit" id="enterRoom" className="btn btn-primary">
                 입장
               </button>
             </div>
@@ -48,7 +54,7 @@ const ModalComponent = () => {
         </div>
       </div>
     </form>
-  ) : null;
+  );
 };
 
 export default ModalComponent;

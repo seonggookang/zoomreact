@@ -1,91 +1,59 @@
-import React, { useEffect, useState, useContext, useRef } from 'react'
-import AppContext from './Appcontext'
-import $ from 'jquery'
-import Bitrate from './Bitrate'
+import React, { useContext } from 'react';
+import AppContext from './Appcontext';
+import Bitrate from './Bitrate';
 
 const Videos = () => {
-  const [localFeed, setLocalFeed] = useState(null)
-  const { socket, getDateTime, getId } = useContext(AppContext)
-
-  const handleUnpublishClick = () => {
-    if (localFeed) {
-      _unpublish({ feed: localFeed })
-    } else {
-      // publishOwnFeed()
-    }
-  }
-  // async function publishOwnFeed() {
-  //   try {
-  //     const offer = await doOffer(local_feed, local_display, false)
-  //     configure({ feed: local_feed, jsep: offer, just_configure: false })
-
-  //     $('#unpublish').text('Unpublish')
-  //   } catch (e) {
-  //     console.log('error while doing offer in publishOwnFeed()', e)
-  //   }
-  // }
-  const _unpublish = ({ feed }) => {
-    console.log('================ _unpublish =============')
-    const unpublishData = {
-      feed,
-    }
-
-    console.log('unpublish sent as below ', getDateTime())
-    console.log({
-      data: unpublishData,
-      _id: getId(),
-    })
-
-    socket.emit('unpublish', {
-      data: unpublishData,
-      _id: getId(),
-    })
-  }
+  const { handleUnpublishClick, configure_bitrate_audio_video, isPublished } = useContext(AppContext);
 
   return (
-    <div id="videos" className="videos">
+    <div id="videos" className="displayFlex">
+      {/* <div id="locals" style={{ display: 'flex', justifyContent: 'space-between', overflowX: 'auto' }}></div> */}
       <span className="fontSize"> -- LOCALS -- </span>
-      <div className="borderGapColor">
-        <div id="locals"></div> {/* 여기가 비디오가 들어올 곳!!!!!!!!!!!! */}
-        <div>
-          <button id="unpublish" className="btn btn-primary btn-xs btn_between" onClick={handleUnpublishClick}>
-            Unpublish
-          </button>
-          <button id="audioset" onClick="configure_bitrate_audio_video('audio');" className="btn btn-primary btn-xs btn_between">
+      {/* <div className="borderGapColor"> */}
+      {/* 여기가 비디오가 들어올 곳!!!!!!!!!!!! */}
+      <div id="local" style={{ padding: '0 5px' }}></div>
+
+      {/* <button id="unpublish" className="btn btn-primary btn-xs btn_between" onClick={handleUnpublishClick}>
+            {isPublished ? 'Unpublish' : 'Publish'}
+          </button> */}
+      {/* <button id="audioset" className="btn btn-primary btn-xs btn_between" onClick="configure_bitrate_audio_video('audio');"> */}
+      {/* <button id="audioset" className="btn btn-primary btn-xs btn_between" onClick={() => configure_bitrate_audio_video('audio')}>
             Audio
           </button>
-          <button id="videoset" onClick="configure_bitrate_audio_video('video');" className="btn btn-primary btn-xs btn_between">
+          <button id="videoset" className="btn btn-primary btn-xs btn_between" onClick={() => configure_bitrate_audio_video('video')}>
             Video
           </button>
           <div className="btn-group btn-group-xs">
-            <Bitrate />
-          </div>
-        </div>
+            <Bitrate configure_bitrate_audio_video={configure_bitrate_audio_video} />
+          </div> */}
+      {/* </div>
         <div id="local_info" className="displayNone">
           local_feed: <div id="local_feed" className="displayFlex"></div>
           private_id: <div id="private_id" className="displayFlex"></div>
-        </div>
-      </div>
-      <br />
-      <span className="fontSize"> -- REMOTES -- </span>
+        </div> */}
+      {/* </div> */}
+
       <div id="remotes" className="remotes">
-        <div className="borderGapColor">
-          <button id="unpublish" className="btn btn-primary btn-xs btn_between displayNone">
-            Unpublish
-          </button>
-          <button id="audioset" onClick="configure_bitrate_audio_video('audio');" className="btn btn-primary btn-xs btn_between displayNone">
-            Audio
-          </button>
-          <button id="videoset" onClick="configure_bitrate_audio_video('video');" className="btn btn-primary btn-xs btn_between displayNone">
-            Video
-          </button>
-          <div className="btn-group btn-group-xs displayNone">
-            <Bitrate />
-          </div>
-        </div>
+        {/* <div className="borderGapColor"> */}
+        <div id="remote" style={{ padding: '0 5px' }} className="displayFlex"></div>
+        {/* <div id="local2_buttons" style={{ textAlign: 'center', display: 'none' }}>
+              <button id="unpublish" className="btn btn-primary btn-xs btn_between displayNone" onClick={handleUnpublishClick}>
+                Unpublish
+              </button>
+              <button id="audioset" className="btn btn-primary btn-xs btn_between displayNone" onClick={() => configure_bitrate_audio_video('audio')}>
+                Audio
+              </button>
+              <button id="videoset" className="btn btn-primary btn-xs btn_between displayNone" onClick={() => configure_bitrate_audio_video('video')}>
+                Video
+              </button>
+              <div className="btn-group btn-group-xs displayNone">
+                <Bitrate configure_bitrate_audio_video={configure_bitrate_audio_video} />
+              </div>
+            </div> */}
+        {/* </div> */}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Videos
+export default Videos;
