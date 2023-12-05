@@ -309,6 +309,7 @@ function App() {
       }
     }
   }
+
   function trickle({ feed, candidate }) {
     // const trickleData = candidate ? { candidate } : {};
     // trickleData.feed = feed;
@@ -555,14 +556,15 @@ function App() {
         // 여기서 에러 발생. localStream이 null 인상태.
         // 지금 이 사이에서 navigator.mediaDevices.getUserMedia()를 사용하고 있었는데 사라짐.
 
-        setLocalStream(
-          await navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: true,
-          })
-        );
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
 
-        localStream.getTracks().forEach((track) => {
+        setLocalStream(stream);
+        // stream이 바로 반영 되는게 아니니 getTracks에서 인식을 못함.
+
+        localStream?.getTracks().forEach((track) => {
           pc.addTrack(track, localStream);
           // if (track.kind === 'audio') {
           //   local_audio_sender = pc.addTrack(track, localStream); // audio track을 localStream에 추가.
@@ -570,6 +572,7 @@ function App() {
           //   local_video_sender = pc.addTrack(track, localStream); // video track을 localStream에 추가.
           // }
         });
+
         // setLocalVideoElement(localStream, feed, display); // 2-3.setLocalVideoElement --> 4번째 인자는 생략했네?
         LocalVideoElement(localStream, feed, display);
 
@@ -675,7 +678,7 @@ function App() {
   useEffect(() => {
     getLocalStream(); // 여기서 비로소 localStream에 값이 들어옴 근데 useEffect는 가장 마지막에 실행되자나?
 
-    socket.on('joined', handleJoined);
+    // socket.on('joined', handleJoined);
     console.log('2번째 useEffect 의 localStream ', localStream);
 
     // 컴포넌트가 언마운트되면 리스너 해제
@@ -714,6 +717,9 @@ function App() {
   return (
     <AppContext.Provider value={contextValue}>
       <div className="App">{isModalVisible ? <ModalComponent /> : <Container />}</div>
+      {localStream ? <div style={{ fontSize: '50px' }}>있다</div> : <div>없다</div>}
+      {localStream && console.log('있다')}
+      {!localStream && console.log('없다')}
     </AppContext.Provider>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import AppContext from './Appcontext';
 
-const LocalVideoContainer = ({ videoContainerId, nameElem, localVideoStreamElem }) => {
+const LocalVideoContainerImage = ({ videoContainerId, nameElem, localVideoStreamElem }) => {
   return (
     <div id={videoContainerId} className="video-view" style={{ position: 'relative' }}>
       {nameElem}
@@ -24,7 +24,9 @@ const Videos = () => {
       videoRef.current.srcObject = localStream;
     }
   }, [localStream]);
+
   console.log('videoRef >>> ', videoRef); //잘 나오고 있고.
+
   useEffect(() => {
     const existingVideoContainer = document.getElementById(videoContainerId);
 
@@ -59,7 +61,7 @@ const Videos = () => {
         //     <img id="videoBtn" className="videoOn" alt="video" />
         //   </div>
         // );
-        const localVideoContainer = <LocalVideoContainer videoContainerId={videoContainerId} nameElem={nameElem} localVideoStreamElem={localVideoStreamElem} />;
+        const localVideoContainer = <LocalVideoContainerImage videoContainerId={videoContainerId} nameElem={nameElem} localVideoStreamElem={localVideoStreamElem} />;
 
         // ReactDOM.render(localVideoContainer, document.getElementById('local'));
 
@@ -82,12 +84,15 @@ const Videos = () => {
       }
     } else {
       const localVideoContainer = document.getElementById(videoContainerId);
+
       if (myName) {
         const nameElem = localVideoContainer.getElementsByTagName('div')[0];
         nameElem.innerHTML = `${myName} (${feed})`;
       }
+
       const localVideoStreamElem = localVideoContainer.getElementsByTagName('video')[0];
       localVideoStreamElem.srcObject = localStream;
+      // videoRef.current.srcObject = localStream;
       setLocalVideoContainer(localVideoContainer);
     }
     // return null;
