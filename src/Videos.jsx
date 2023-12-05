@@ -1,31 +1,20 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import AppContext from './Appcontext';
 
-const LocalVideoContainerImage = ({ videoContainerId, nameElem, localVideoStreamElem }) => {
-  return (
-    <div id={videoContainerId} className="video-view" style={{ position: 'relative' }}>
-      {nameElem}
-      {localVideoStreamElem}
-      <img id="audioBtn" className="audioOn" alt="audio" />
-      <img id="videoBtn" className="videoOn" alt="video" />
-    </div>
-  );
-};
+const LocalVideoContainerImage = ({ videoContainerId, nameElem, localVideoStreamElem }) => (
+  <div id={videoContainerId} className="video-view" style={{ position: 'relative' }}>
+    {nameElem}
+    {localVideoStreamElem}
+    <img id="audioBtn" className="audioOn" alt="audio" />
+    <img id="videoBtn" className="videoOn" alt="video" />
+  </div>
+);
 
 const Videos = () => {
-  const [localVideoContainer, setLocalVideoContainer] = useState(null);
-  const { handleUnpublishClick, localStream, feed, myName, displayName, configure_bitrate_audio_video, isPublished } = useContext(AppContext);
+  const [LVContainer, setLVContainer] = useState(null);
+  const { localStream, feed, myName } = useContext(AppContext);
   const videoContainerId = `video_${feed}`;
   const videoRef = useRef(null);
-  console.log('localStream >>> ', localStream); //잘 나오고 있고.
-
-  useEffect(() => {
-    if (videoRef.current && localStream) {
-      videoRef.current.srcObject = localStream;
-    }
-  }, [localStream]);
-
-  console.log('videoRef >>> ', videoRef); //잘 나오고 있고.
 
   useEffect(() => {
     const existingVideoContainer = document.getElementById(videoContainerId);
@@ -80,7 +69,7 @@ const Videos = () => {
         // ReactDOM.render(localVideoContainer, container);
         // document.getElementById('local').appendChild(localVideoContainer); // 인자가 DOM 노드가 아니라고 한다..
         // 넌 지금 React JSX를 전달하고 있다.
-        setLocalVideoContainer(localVideoContainer);
+        setLVContainer(localVideoContainer);
       }
     } else {
       const localVideoContainer = document.getElementById(videoContainerId);
@@ -93,18 +82,18 @@ const Videos = () => {
       const localVideoStreamElem = localVideoContainer.getElementsByTagName('video')[0];
       localVideoStreamElem.srcObject = localStream;
       // videoRef.current.srcObject = localStream;
-      setLocalVideoContainer(localVideoContainer);
+      setLVContainer(localVideoContainer);
     }
     // return null;
   }, [localStream, feed, myName, videoContainerId]);
-
+  console.log('LVContainer >>> ', LVContainer);
   return (
     <div id="videos" className="displayFlex">
       <span className="fontSize"> -- LOCALS -- </span>
 
       {/* 아예 여기다가 신도시를 개척해보는 건 어때? */}
       <div id="local" style={{ padding: '0 5px' }}>
-        {localVideoContainer}
+        {LVContainer}
       </div>
 
       <div id="remotes" className="remotes">

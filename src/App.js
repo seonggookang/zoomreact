@@ -1,7 +1,7 @@
 import './App.css';
 import Container from './Container';
 import ModalComponent from './ModalComponent';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, ReactDOM } from 'react';
 import AppContext from './Appcontext';
 import io from 'socket.io-client';
 import $ from 'jquery';
@@ -207,65 +207,65 @@ function App() {
     }
   }
 
-  // function setLocalVideoElement(localStream, feed, display, room, description) {
-  //   // room 이 아주 잽싸게 먼저 와버리네 그리고 feed랑 display가 천천히 들어오고.
+  function setLocalVideoElement(localStream, feed, display, room, description) {
+    // room 이 아주 잽싸게 먼저 와버리네 그리고 feed랑 display가 천천히 들어오고.
 
-  //   if (room) document.getElementById('videos').getElementsByTagName('span')[0].innerHTML = '   --- VIDEOROOM (' + room + ') ---  ' + 'roomname : ' + description; // 방 입장 순간, -- LOCALS -- 부분은 VIDEOROOM으로 치환
+    if (room) document.getElementById('videos').getElementsByTagName('span')[0].innerHTML = '   --- VIDEOROOM (' + room + ') ---  ' + 'roomname : ' + description; // 방 입장 순간, -- LOCALS -- 부분은 VIDEOROOM으로 치환
 
-  //   if (!feed) return;
+    if (!feed) return;
 
-  //   const videoContainerId = `video_${feed}`;
-  //   const existingVideoContainer = document.getElementById(videoContainerId);
-  //   if (!existingVideoContainer) {
-  //     const nameElem = document.createElement('div');
-  //     nameElem.innerHTML = display;
-  //     nameElem.style.display = 'table';
-  //     nameElem.style.cssText = 'color: #fff; font-size: 0.8rem;';
+    const videoContainerId = `video_${feed}`;
+    const existingVideoContainer = document.getElementById(videoContainerId);
+    if (!existingVideoContainer) {
+      const nameElem = document.createElement('div');
+      nameElem.innerHTML = display;
+      nameElem.style.display = 'table';
+      nameElem.style.cssText = 'color: #fff; font-size: 0.8rem;';
 
-  //     if (localStream) {
-  //       console.log('localStream!!!!!!!!!!!', localStream); // 잘나오는중
+      if (localStream) {
+        console.log('localStream!!!!!!!!!!!', localStream); // 잘나오는중
 
-  //       const localVideoStreamElem = document.createElement('video');
-  //       localVideoStreamElem.width = 160;
-  //       localVideoStreamElem.height = 120;
-  //       localVideoStreamElem.autoplay = true;
-  //       localVideoStreamElem.muted = 'muted';
-  //       localVideoStreamElem.classList.add('localVideoTag');
-  //       localVideoStreamElem.style.cssText = '-moz-transform: scale(-1, 1); -webkit-transform: scale(-1, 1); -o-transform: scale(-1, 1); transform: scale(-1, 1); filter: FlipH;';
-  //       localVideoStreamElem.srcObject = localStream;
+        const localVideoStreamElem = document.createElement('video');
+        localVideoStreamElem.width = 160;
+        localVideoStreamElem.height = 120;
+        localVideoStreamElem.autoplay = true;
+        localVideoStreamElem.muted = 'muted';
+        localVideoStreamElem.classList.add('localVideoTag');
+        localVideoStreamElem.style.cssText = '-moz-transform: scale(-1, 1); -webkit-transform: scale(-1, 1); -o-transform: scale(-1, 1); transform: scale(-1, 1); filter: FlipH;';
+        localVideoStreamElem.srcObject = localStream;
 
-  //       const localVideoContainer = document.createElement('div');
-  //       localVideoContainer.id = 'video_' + feed;
-  //       localVideoContainer.appendChild(nameElem);
-  //       localVideoContainer.appendChild(localVideoStreamElem);
+        const localVideoContainer = document.createElement('div');
+        localVideoContainer.id = 'video_' + feed;
+        localVideoContainer.appendChild(nameElem);
+        localVideoContainer.appendChild(localVideoStreamElem);
 
-  //       localVideoContainer.classList.add('video-view');
-  //       localVideoContainer.style.cssText = 'position: relative;';
+        localVideoContainer.classList.add('video-view');
+        localVideoContainer.style.cssText = 'position: relative;';
 
-  //       const localAudioOnOffElem = document.createElement('img');
-  //       localAudioOnOffElem.id = 'audioBtn';
-  //       localAudioOnOffElem.classList.add('audioOn');
+        const localAudioOnOffElem = document.createElement('img');
+        localAudioOnOffElem.id = 'audioBtn';
+        localAudioOnOffElem.classList.add('audioOn');
 
-  //       const localVideoOnOffElem = document.createElement('img');
-  //       localVideoOnOffElem.id = 'videoBtn';
-  //       localVideoOnOffElem.classList.add('videoOn');
+        const localVideoOnOffElem = document.createElement('img');
+        localVideoOnOffElem.id = 'videoBtn';
+        localVideoOnOffElem.classList.add('videoOn');
 
-  //       localVideoContainer.appendChild(localAudioOnOffElem);
-  //       localVideoContainer.appendChild(localVideoOnOffElem);
+        localVideoContainer.appendChild(localAudioOnOffElem);
+        localVideoContainer.appendChild(localVideoOnOffElem);
 
-  //       document.getElementById('local').appendChild(localVideoContainer);
-  //     }
-  //   } else {
-  //     // 일단 이 아래 else에 대한 부분은 안나오고 있음 - steve
-  //     const localVideoContainer = document.getElementById('video_' + feed);
-  //     if (display) {
-  //       const nameElem = localVideoContainer.getElementsByTagName('div')[0];
-  //       nameElem.innerHTML = display + ' (' + feed + ')';
-  //     }
-  //     const localVideoStreamElem = localVideoContainer.getElementsByTagName('video')[0];
-  //     localVideoStreamElem.srcObject = localStream;
-  //   }
-  // }
+        document.getElementById('local').appendChild(localVideoContainer);
+      }
+    } else {
+      // 일단 이 아래 else에 대한 부분은 안나오고 있음 - steve
+      const localVideoContainer = document.getElementById('video_' + feed);
+      if (display) {
+        const nameElem = localVideoContainer.getElementsByTagName('div')[0];
+        nameElem.innerHTML = display + ' (' + feed + ')';
+      }
+      const localVideoStreamElem = localVideoContainer.getElementsByTagName('video')[0];
+      localVideoStreamElem.srcObject = localStream;
+    }
+  }
 
   function setRemoteVideoElement(remoteStream, feed, display) {
     if (!feed) return;
@@ -496,15 +496,14 @@ function App() {
   socket.on('joined', async ({ data }) => {
     _listRooms();
 
-    // setLocalVideoElement(null, null, null, data.room, data.description);
-    LocalVideoElement(null, null, null, data.room, data.description);
-    console.log('data >>>>>> ', data);
+    setLocalVideoElement(null, null, null, data.room, data.description);
+    // LocalVideoElement(null, null, null, data.room, data.description);
+
     try {
       const offer = await doOffer(data.feed, data.display, false); // 3번째 인자 false는 왜 있음?? 필요없으면 지우자, 여기서 return한 offer가 jsep ==> type, sdp 담고 있음.
-      console.log('offer >>> ', offer);
+
       configure({ feed: data.feed, jsep: offer, just_configure: false }); // 서버에서 준 data.feed
-      console.log('data >>> ', data);
-      console.log('data.publishers >>> ', data.publishers); // 1번의값
+
       subscribeTo(data.publishers, data.room); // 2번이 같은방에 들어오면 실행.
       let vidTrack = localStream.getVideoTracks();
       vidTrack.forEach((track) => (track.enabled = true));
@@ -573,8 +572,8 @@ function App() {
           // }
         });
 
-        // setLocalVideoElement(localStream, feed, display); // 2-3.setLocalVideoElement --> 4번째 인자는 생략했네?
-        LocalVideoElement(localStream, feed, display);
+        setLocalVideoElement(localStream, feed, display); // 2-3.setLocalVideoElement --> 4번째 인자는 생략했네?
+        // LocalVideoElement(localStream, feed, display);
 
         // return <LocalVideoElement localStream={localStream} feed={feed} display={display} />;
       } catch (e) {
@@ -657,8 +656,8 @@ function App() {
 
   const handleJoined = async ({ data }) => {
     _listRooms();
-    // setLocalVideoElement(null, null, null, data.room, data.description);
-    LocalVideoElement(null, null, null, data.room, data.description);
+    setLocalVideoElement(null, null, null, data.room, data.description);
+    // LocalVideoElement(null, null, null, data.room, data.description);
 
     try {
       // 여기서 localStream 이 안들어오고 있는 상황.
