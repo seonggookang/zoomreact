@@ -525,36 +525,34 @@ const Container = () => {
   return (
     <>
       <div className="wrapper">
-        <div className="">
-          <section className="content">
-            <div className="container-fluid">
-              <div className="row">
-                <div className="col-12">
-                  <div className="card" style={{ backgroundColor: '#bebebe' }}>
-                    <div className="col-12">
-                      <div className="row">
-                        <Myinfo /> {/* 여기도 localStream이 쓰이고, */}
-                        <RoomsList />
-                      </div>
-                      <Videos /> {/* 여기도 localStream이 쓰이고, */}
-                      <div id="screen" className="screen"></div>
+        <section className="content">
+          <div className="container-fluid">
+            <div className="row">
+              <div className="col-12">
+                <div className="card" style={{ backgroundColor: '#bebebe' }}>
+                  <div className="col-12">
+                    <div className="row">
+                      <Myinfo /> {/* 여기도 localStream이 쓰이고, */}
+                      <RoomsList />
                     </div>
+                    <Videos /> {/* 여기도 localStream이 쓰이고, */}
+                    <div id="screen" className="screen"></div>
                   </div>
                 </div>
               </div>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
       </div>
 
       {/* ----- 이 밑에 있는 것들이 적용이 되려면? ----- */}
 
       {/* <!-- Bootstrap 4 --> */}
-      {/* <script src="../AdminLTE/plugins/bootstrap/js/bootstrap.bundle.min.js"></script> */}
+      <script src="../AdminLTE/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
       {/* AdminLTE App */}
-      {/* <script src="../AdminLTE/dist/js/adminlte.min.js"></script> */}
+      <script src="../AdminLTE/dist/js/adminlte.min.js"></script>
 
-      {/* <script src="/node_modules/socket.io-client/dist/socket.io.js"></script> */}
+      <script src="/node_modules/socket.io-client/dist/socket.io.js"></script>
     </>
   );
 };

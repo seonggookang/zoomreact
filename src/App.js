@@ -641,14 +641,12 @@ function App() {
 
   const getLocalStream = async () => {
     try {
-      setLocalStream(
-        await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: true,
-        })
-      );
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
 
-      console.log('localStream$$ >>> ', localStream); // 안나옴
+      setLocalStream(stream);
     } catch (error) {
       console.error('Error accessing local media:', error);
     }
@@ -671,13 +669,18 @@ function App() {
   };
 
   useEffect(() => {
+    console.log('1번째 useEffect 의 localStream ', localStream);
+  }, [localStream]); // localStream이 변경될 때마다 useEffect가 호출됨
+
+  useEffect(() => {
     getLocalStream(); // 여기서 비로소 localStream에 값이 들어옴 근데 useEffect는 가장 마지막에 실행되자나?
-    // 그 말은 localStream이라는 값을 사용할거면 이 뒤에서 부터 사용을 해야하는건데?
 
     socket.on('joined', handleJoined);
+    console.log('2번째 useEffect 의 localStream ', localStream);
 
     // 컴포넌트가 언마운트되면 리스너 해제
   }, []); // useEffect 의존성 배열은 비어있음
+  console.log('useEffect 밖의 localStream >>>', localStream);
 
   const contextValue = {
     displayName,
