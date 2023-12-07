@@ -18,9 +18,11 @@ const ModalComponent = () => {
     } else {
       hideModal(false);
       if (socket && !socket.connected) {
+        console.log('hi1');
         socket.connect(); // 이걸 useEffect 안에다가?
         _listRooms();
       } else {
+        console.log('hi2');
         alert('already connected!');
       }
     }

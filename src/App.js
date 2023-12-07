@@ -6,6 +6,7 @@ import AppContext from './Appcontext';
 import io from 'socket.io-client';
 import $ from 'jquery';
 import LocalVideoElement from './LocalVideoElement';
+import Videos from './Videos';
 
 function App() {
   const [displayName, setDisplayName] = useState('');
@@ -655,7 +656,7 @@ function App() {
       getLocalStream();
     }
     // getLocalStream();
-  }, [localStream]);
+  }, []);
 
   const contextValue = {
     displayName,
@@ -683,35 +684,14 @@ function App() {
     join,
     publishOwnFeed,
     handleUnpublishClick,
+    isAudioOn,
+    isVideoOn,
+    configure_bitrate_audio_video,
   };
 
   return (
     <AppContext.Provider value={contextValue}>
-      <div className="App">{isModalVisible ? <ModalComponent /> : <Container />}</div>
-
-      {/* 여기에 작성해 놓은 비디오에도 feed가 달려야함.. */}
-      <div id={`video_123`} className="video-view" style={{ position: 'relative' }}>
-        <div>{displayName}</div>
-        <video //
-          className="localVideoTag"
-          style={{
-            width: 160,
-            height: 120,
-            margin: 5,
-            backgroundColor: 'black',
-          }}
-          muted
-          autoPlay
-          ref={(localVideoRef) => {
-            if (localVideoRef) {
-              localVideoRef.srcObject = localStream;
-            }
-          }}
-        />
-        <img id="audioBtn" className={`${isAudioOn ? 'audioOn' : 'audioOff'}`} alt="audio" onClick={() => configure_bitrate_audio_video('audio')} />
-        <img id="videoBtn" className={`${isVideoOn ? 'videoOn' : 'videoOff'}`} alt="video" onClick={() => configure_bitrate_audio_video('video')} />
-      </div>
-      {/*  여기에 remotes 관련 애들이 들어올수 있도록 */}
+      <div className="App">{isModalVisible ? <ModalComponent /> : <Videos />}</div>
     </AppContext.Provider>
   );
 }
