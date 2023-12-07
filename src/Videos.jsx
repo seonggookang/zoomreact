@@ -563,9 +563,6 @@ const Videos = () => {
           <img id="videoBtn" className={`${isVideoOn ? 'videoOn' : 'videoOff'}`} alt="video" onClick={() => configure_bitrate_audio_video('video')} />
         </div>
       </div>
-
-      <Container />
-      <RoomsList />
       <div id="remotes" className="remotes"></div>
     </div>
   );

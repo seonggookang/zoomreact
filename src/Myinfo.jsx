@@ -30,7 +30,7 @@ const Myinfo = () => {
     }
   };
 
-  const _create = ({
+  function _create({
     room,
     description,
     max_publishers = 6,
@@ -41,7 +41,7 @@ const Myinfo = () => {
     talking_packets_threshold = 100,
     permanent = false,
     bitrate = 128000,
-  }) => {
+  }) {
     console.log('================ _create =============');
     console.log('create sent as below ', getDateTime());
     console.log({
@@ -76,7 +76,7 @@ const Myinfo = () => {
       },
       _id: getId(),
     });
-  };
+  }
 
   //////////////////////////////// CREATE //////////////////////////////////////////////////////////////
 
