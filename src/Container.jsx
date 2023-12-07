@@ -385,6 +385,7 @@ const Container = () => {
       if (pcMap.has(feed)) {
         console.log('이미 있는 feed 임. No need to subscribe');
       } else {
+        console.log('feed가 없으니까 subscribe!');
         subscribe({ feed, room: data_room });
       }
     });
@@ -403,6 +404,7 @@ const Container = () => {
     }
   });
 
+  // 리액트에서도 상대가 나가면 동작함!!!
   socket.on('leaving', ({ data }) => {
     console.log('feed leaving', data);
     if (data.feed) {
@@ -412,23 +414,23 @@ const Container = () => {
     _listRooms();
   });
 
-  socket.on('leaving111', ({ data }) => {
-    console.log('feed leaving', getDateTime());
-    console.log(data);
-    _listRooms();
+  // socket.on('leaving111', ({ data }) => {
+  //   console.log('feed leaving', getDateTime());
+  //   console.log(data);
+  //   _listRooms();
 
-    if (data.feed) {
-      if (data.who_is_leaving === 'me') {
-        removeAllVideoElements();
-        $('#local_feed').text('');
-        $('#private_id').text('');
-        closeAllPCs();
-      } else {
-        removeVideoElementByFeed(data.feed);
-        closePC(data.feed);
-      }
-    }
-  });
+  //   if (data.feed) {
+  //     if (data.who_is_leaving === 'me') {
+  //       removeAllVideoElements();
+  //       $('#local_feed').text('');
+  //       $('#private_id').text('');
+  //       closeAllPCs();
+  //     } else {
+  //       removeVideoElementByFeed(data.feed);
+  //       closePC(data.feed);
+  //     }
+  //   }
+  // });
 
   socket.on('exists', ({ data }) => {
     console.log('room exists ', getDateTime());
@@ -451,27 +453,26 @@ const Container = () => {
   //   });
   // });
 
-  useEffect(() => {
-    socket.on('configured', async ({ data, _id }) => {
-      console.log('feed configured just_configure >>> ', data.just_configure, getDateTime()); // just_configure이란??
-      console.log('클라에서 configured 수신한 data >>> ', data); // 4개 (feed, just_configure, room, jsep) ( type: 'answer', sdp 들어있음 )
-      pendingOfferMap.delete(_id);
-      const pc = pcMap.get(data.feed);
-      if (pc && data.jsep) {
-        try {
-          await pc.setRemoteDescription(data.jsep);
-          console.log('configure remote sdp OK ', data.jsep.type); // answer 출력
-          if (data.jsep.type === 'offer' && data.just_configure == false) {
-            console.log('data.jsep.type === offer 이므로 doAnswer()와 start() 실행.. just_configure >>> ', data.just_configure);
-            const answer = await doAnswer(data.feed, null, data.jsep);
-            start(data.feed, answer);
-          }
-        } catch (e) {
-          console.log('error setting remote sdp >>> ', e);
+  socket.on('configured', async ({ data, _id }) => {
+    console.log('feed configured just_configure >>> ', data.just_configure, getDateTime()); // just_configure이란??
+    console.log('클라에서 configured 수신한 data >>> ', data); // 4개 (feed, room, jsep, just_configure) (jsep -->>  type: 'answer', sdp 들어있음 )
+    pendingOfferMap.delete(_id); // 이건 왜하나?
+    const pc = pcMap.get(data.feed);
+    if (pc && data.jsep) {
+      try {
+        await pc.setRemoteDescription(data.jsep); // 1번 자신의 answer를 저장 // 이게 왜 에러?
+        console.log('configure remote sdp OK ', data.jsep.type); // answer 출력
+        if (data.jsep.type === 'offer' && data.just_configure === false) {
+          console.log('data.jsep.type === offer 이므로 doAnswer()와 start() 실행.. just_configure >>> ', data.just_configure);
+          const answer = await doAnswer(data.feed, null, data.jsep);
+          start(data.feed, answer);
         }
+      } catch (e) {
+        console.log('error setting remote sdp >>> ', e); // 이게 에러가 나오고 있다는 뜻은 try안에서 에러가 난다는뜻
       }
-    });
-  }, []);
+    }
+  });
+  useEffect(() => {}, []);
 
   socket.on('rtp-fwd-started', ({ data }) => {
     console.log('rtp forwarding started', data);
@@ -484,15 +485,6 @@ const Container = () => {
   socket.on('rtp-fwd-list', ({ data }) => {
     console.log('rtp forwarders list', data);
   });
-
-  // async function _restartPublisher(feed) {
-  //   const offer = await doOffer(feed, null);
-  //   configure({ feed, jsep: offer, just_configure: false });
-  // }
-
-  // async function _restartSubscriber(feed) {
-  //   configure({ feed, restart: true, just_configure: false });
-  // }
 
   function removeVideoElementByFeed(feed, stopTracks = true) {
     const videoContainer = document.getElementById(`video_${feed}`);
@@ -509,15 +501,18 @@ const Container = () => {
   }
 
   function removeAllVideoElements() {
-    console.log('removeAllVideoElements() 실행되나????');
     const locals = document.getElementById('locals');
     const localVideoContainers = locals.getElementsByTagName('div');
-    for (let i = 0; localVideoContainers && i < localVideoContainers.length; i++) removeVideoElement(localVideoContainers[i]);
+    for (let i = 0; localVideoContainers && i < localVideoContainers.length; i++) {
+      removeVideoElement(localVideoContainers[i]);
+    }
     while (locals.firstChild) locals.removeChild(locals.firstChild);
 
     let remotes = document.getElementById('remotes');
     const remoteVideoContainers = remotes.getElementsByTagName('div');
-    for (let i = 0; remoteVideoContainers && i < remoteVideoContainers.length; i++) removeVideoElement(remoteVideoContainers[i]);
+    for (let i = 0; remoteVideoContainers && i < remoteVideoContainers.length; i++) {
+      removeVideoElement(remoteVideoContainers[i]);
+    }
     while (remotes.firstChild) remotes.removeChild(remotes.firstChild);
     document.getElementById('videos').getElementsByTagName('span')[0].innerHTML = '   --- VIDEOROOM () ---  ';
   }
@@ -532,7 +527,7 @@ const Container = () => {
                 <div className="card" style={{ backgroundColor: '#bebebe' }}>
                   <div className="col-12">
                     <div className="row">
-                      <Myinfo /> {/* 여기도 localStream이 쓰이고, */}
+                      <Myinfo /> {/*여기도 localStream이 쓰이고, */}
                       <RoomsList />
                     </div>
                     <Videos /> {/* 여기도 localStream이 쓰이고, */}

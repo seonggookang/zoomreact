@@ -4,7 +4,7 @@ import AppContext from './Appcontext';
 import $ from 'jquery';
 
 const ModalComponent = () => {
-  const { displayName, setDisplayName, handleDisplayNameChange, setIsModalVisible, socket, _listRooms, join } = useContext(AppContext);
+  const { displayName, setDisplayName, handleDisplayNameChange, setIsModalVisible, socket, _listRooms } = useContext(AppContext);
 
   const hideModal = () => {
     setIsModalVisible(false);
@@ -19,6 +19,7 @@ const ModalComponent = () => {
       hideModal(false);
       if (socket && !socket.connected) {
         socket.connect(); // 이걸 useEffect 안에다가?
+        _listRooms();
       } else {
         alert('already connected!');
       }

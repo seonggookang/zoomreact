@@ -22,12 +22,13 @@ function App() {
   const [localStream, setLocalStream] = useState(null);
   const localVideoRef = useRef(null);
   const [socket, _] = useState(io('https://janusc.wizbase.co.kr:4443', { autoConnect: false }));
+  const [isAudioOn, setIsAudioOn] = useState(true);
+  const [isVideoOn, setIsVideoOn] = useState(true);
 
   const pcMap = new Map();
-  let pendingOfferMap = new Map();
+  let pendingOfferMap = new Map(); // 존재 이유는?
   let local_feed;
   let local_display;
-  let frameRate;
 
   function getURLParameter(name) {
     const regex = new RegExp(`[?|&]${name}=([^&;]+?)(&|#|;|$)`);
@@ -42,111 +43,6 @@ function App() {
       .padStart(16, '0'); // 16자리에서 앞쪽부터 빈자리는 0으로 채움.
     return parseInt(randomNumber); // 정수화
   };
-
-  ////////////////////////////////////////////////////////////////////////
-  $(document).on('click', '.audioOn, .audioOff', function () {
-    configure_bitrate_audio_video('audio'); // 이게 null 인거구나..
-  });
-  $(document).on('click', '.videoOn, .videoOff', function () {
-    configure_bitrate_audio_video('video');
-  });
-  ////////////////////////////////////////////////////////////////////////
-
-  // 이 함수가 사용되기 전에 localStream이 불러와지면 어때?
-  async function configure_bitrate_audio_video(mode, bitrate = 0) {
-    console.log('================ configure_bitrate_audio_video =============');
-    let feed = parseInt($('#local_feed').text());
-
-    if (mode === 'bitrate') {
-      let configureData = {
-        feed,
-        bitrate: bitrate,
-      };
-      console.log({
-        data: configureData,
-        _id: getId(),
-      });
-      console.log(bitrate / 1000);
-      let bitrate_label = bitrate / 1000 > 1000 ? bitrate / 1000 / 1000 + 'M' : bitrate / 1000 + 'K';
-      $('#Bandwidth_label').text(bitrate_label);
-      socket.emit('configure', {
-        data: configureData,
-        _id: getId(),
-      });
-    }
-    if (mode === 'audio') {
-      if ($('#audioBtn').hasClass('audioOn')) {
-        $('#audioBtn').removeClass('audioOn').addClass('audioOff');
-
-        console.log('오디오 끄기');
-        const audioTrack = localStream.getAudioTracks()[0];
-
-        if (audioTrack) {
-          const isAudioEnabled = audioTrack.enabled;
-          audioTrack.enabled = !isAudioEnabled;
-        } else {
-          console.log('오디오 트랙을 찾을 수 없습니다.');
-        }
-      } else {
-        console.log('오디오 켜기');
-        const audioTrack = localStream.getAudioTracks()[0]; // 이걸 딱 누른순간,  $(document).on('click', '.audioOn, .audioOff', function () { 이게 없는 상황
-
-        if (audioTrack) {
-          const isAudioEnabled = audioTrack.enabled;
-          audioTrack.enabled = !isAudioEnabled;
-        } else {
-          console.log('오디오 트랙을 찾을 수 없습니다.');
-        }
-      }
-    }
-    if (mode === 'video') {
-      //비디오를 끄는 것이면
-      if ($('#videoBtn').hasClass('videoOn')) {
-        $('#videoBtn').removeClass('videoOn').addClass('videoOff');
-
-        console.log('비디오 끄기');
-        // 미디어 스트림에서 비디오 트랙을 가져옵니다.
-        // localStream이 null인 상황
-        const videoTrack = localStream.getVideoTracks()[0];
-
-        // 비디오 트랙이 있는지 확인합니다.
-        if (videoTrack) {
-          const isAudioEnabled = videoTrack.enabled;
-          videoTrack.enabled = !isAudioEnabled;
-        } else {
-          console.log('비디오 트랙을 찾을 수 없습니다.');
-        }
-
-        try {
-        } catch (e) {
-          console.log('error while doing offer for changing', e);
-          return;
-        }
-      } else {
-        //비디오를 켜는 것이면,
-        $('#videoset').removeClass('btn-warning').addClass('btn-primary');
-
-        console.log('비디오 켜기');
-        // 미디어 스트림에서 비디오 트랙을 가져옵니다.
-        const videoTrack = localStream.getVideoTracks()[0];
-        console.log('videoTrack', videoTrack);
-
-        if (videoTrack) {
-          const isAudioEnabled = videoTrack.enabled;
-          videoTrack.enabled = !isAudioEnabled;
-        } else {
-          console.log('비디오 트랙을 찾을 수 없습니다.');
-        }
-
-        try {
-          console.log('tr something');
-        } catch (e) {
-          console.log('error while doing offer for changing', e);
-          return;
-        }
-      }
-    }
-  }
 
   async function doAnswer(feed, display, offer) {
     console.log('doAnswer()중.. feed >>> ', feed, 'display >>> ', display, 'offer >>> ', offer);
@@ -210,7 +106,7 @@ function App() {
   function setLocalVideoElement(localStream, feed, display, room, description) {
     // room 이 아주 잽싸게 먼저 와버리네 그리고 feed랑 display가 천천히 들어오고.
 
-    if (room) document.getElementById('videos').getElementsByTagName('span')[0].innerHTML = '   --- VIDEOROOM (' + room + ') ---  ' + 'roomname : ' + description; // 방 입장 순간, -- LOCALS -- 부분은 VIDEOROOM으로 치환
+    if (room) document.getElementById('videos').getElementsByTagName('span')[0].innerHTML = '   --- VIDEOROOM (' + room + ') ---  ' + 'roomname : ' + description;
 
     if (!feed) return;
 
@@ -223,8 +119,6 @@ function App() {
       nameElem.style.cssText = 'color: #fff; font-size: 0.8rem;';
 
       if (localStream) {
-        console.log('localStream!!!!!!!!!!!', localStream); // 잘나오는중
-
         const localVideoStreamElem = document.createElement('video');
         localVideoStreamElem.width = 160;
         localVideoStreamElem.height = 120;
@@ -277,8 +171,8 @@ function App() {
       nameElem.style.display = 'table';
 
       const remoteVideoStreamElem = document.createElement('video');
-      remoteVideoStreamElem.width = 320;
-      remoteVideoStreamElem.height = 240;
+      remoteVideoStreamElem.width = 160;
+      remoteVideoStreamElem.height = 120;
       remoteVideoStreamElem.autoplay = true;
       remoteVideoStreamElem.setAttribute('feed', feed);
       remoteVideoStreamElem.style.cssText = '-moz-transform: scale(-1, 1); -webkit-transform: scale(-1, 1); -o-transform: scale(-1, 1); transform: scale(-1, 1); filter: FlipH;';
@@ -372,7 +266,7 @@ function App() {
     pcMap.clear();
   }
   function subscribe({ feed, room = myRoom, substream, temporal }) {
-    console.log('================ subscribe =============', myRoom, room);
+    console.log('================ subscribe ============= room >>', room);
     const subscribeData = {
       room,
       feed,
@@ -409,6 +303,10 @@ function App() {
     }
   }
   function configure({ feed, jsep, restart, substream, temporal, just_configure }) {
+    console.log('jsep >>> ', jsep);
+    // jsep에는 아래 2개개 들어있음.
+    // type: offer,
+    // sdp: sdp: "v=0\r\no=- 8226341266340469384 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\n
     console.log('================ configure =============');
     let v_just_configure;
     const configureData = {
@@ -429,12 +327,13 @@ function App() {
     const configId = getId(); // random값 부여.
 
     console.log('configure sent as below ', getDateTime());
-    console.log({
+    console.log('data, _id >>>', {
       data: configureData,
       _id: configId,
     });
     socket.emit('configure', {
-      // 1번이 configure 전송. 서버에 있는 자신의 handle에 offer를 전달하기 위해. (handle이란??), 서버에서 1번 handle에 자신의 offer를 저장.
+      // 1번이 configure 전송.
+      // 서버에 있는 자신의 handle에 offer를 전달하기 위해. (handle: 서버에서 다루는 내용), 서버에서 1번 handle에 자신의 offer를 저장.
       data: configureData, // 5개 정보(feed, audio, video, data, jsep --> type, sdp 담고있음)
       _id: configId,
       just_configure: v_just_configure,
@@ -484,26 +383,26 @@ function App() {
       _id: getId(),
     });
     socket.emit('join', {
-      // 드디어 socketRef.current.io의 첫 시작. 1번이 join을 서버로 전송, 서버에서 description에 대한 처리를 내부적으로 해줘야 하는건가?
+      // 드디어 socketRef.current.io의 첫 시작. 1번이 join을 서버로 전송,
+      // 2번 user용 handle 생성.
       data: joinData,
       _id: getId(),
     });
   }
 
-  /////////////////////////////////////////////////////////////////////////////
-  // 이 socket.on('joined는 무조건 useEffect에 넣어야하는가??
-
   socket.on('joined', async ({ data }) => {
     _listRooms();
 
     setLocalVideoElement(null, null, null, data.room, data.description);
+    // 이게 함수로서 작용을 해야하는가, 컴포넌트로서 작용해야 하는가..
+    // 함수로 작용하지만 태그들이 생성되니까 뭔가 태그가 있는 jsx가 되어야 할 거 같은데.
+    // 이 함수 안에다가 컴포넌트를 두는건 이상하지.
     // LocalVideoElement(null, null, null, data.room, data.description);
-
+    console.log('joined의 data >>> ', data);
     try {
       const offer = await doOffer(data.feed, data.display, false); // 3번째 인자 false는 왜 있음?? 필요없으면 지우자, 여기서 return한 offer가 jsep ==> type, sdp 담고 있음.
-
+      console.log('await doOffer(data.feed, data.display, false);의 offer >>>', offer); // type 과 sdp
       configure({ feed: data.feed, jsep: offer, just_configure: false }); // 서버에서 준 data.feed
-
       subscribeTo(data.publishers, data.room); // 2번이 같은방에 들어오면 실행.
       let vidTrack = localStream.getVideoTracks();
       vidTrack.forEach((track) => (track.enabled = true));
@@ -515,7 +414,6 @@ function App() {
   });
 
   const doOffer = async (feed, display) => {
-    // offer 리턴함
     console.log('doOffer().. feed =', feed, ',', 'display =', display);
     if (!pcMap.has(feed)) {
       // pcMap은 feed가 없으니까 아래 코드가 실행.
@@ -547,32 +445,28 @@ function App() {
       local_feed = feed;
       local_display = display;
       console.log('pc 추가됨, pcMap >>> ', pcMap);
-
+      console.log('local_feed in doOffer >> ', local_feed);
       try {
-        frameRate = parseInt($('#frame_rate').val());
-        console.log('========frame_rate=', $('#frame_rate').val()); // 15로 고정돼있음
-
-        // 여기서 에러 발생. localStream이 null 인상태.
-        // 지금 이 사이에서 navigator.mediaDevices.getUserMedia()를 사용하고 있었는데 사라짐.
-
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
           video: true,
         });
 
         setLocalStream(stream);
-        // stream이 바로 반영 되는게 아니니 getTracks에서 인식을 못함.
 
-        localStream?.getTracks().forEach((track) => {
-          pc.addTrack(track, localStream);
-          // if (track.kind === 'audio') {
-          //   local_audio_sender = pc.addTrack(track, localStream); // audio track을 localStream에 추가.
-          // } else {
-          //   local_video_sender = pc.addTrack(track, localStream); // video track을 localStream에 추가.
-          // }
-        });
-
-        setLocalVideoElement(localStream, feed, display); // 2-3.setLocalVideoElement --> 4번째 인자는 생략했네?
+        if (localStream) {
+          console.log('localStream 나와? >>> ', localStream);
+          localStream.getTracks().forEach((track) => {
+            pc.addTrack(track, localStream);
+            // if (track.kind === 'audio') {
+            //   local_audio_sender = pc.addTrack(track, localStream); // audio track을 localStream에 추가.
+            // } else {
+            //   local_video_sender = pc.addTrack(track, localStream); // video track을 localStream에 추가.
+            // }
+          });
+          setLocalVideoElement(localStream, feed, display); // 2-3.setLocalVideoElement --> 4번째 인자는 생략했네?
+        }
+        console.log('localStream 안나와... >>> ', localStream);
         // LocalVideoElement(localStream, feed, display);
 
         // return <LocalVideoElement localStream={localStream} feed={feed} display={display} />;
@@ -590,7 +484,7 @@ function App() {
     try {
       const pc = pcMap.get(feed);
       const offer = await pc.createOffer();
-      console.log('offer >>> ', offer); // type, sdp
+      console.log('await pc.createOffer();의 offer >>> ', offer); // type, sdp
       await pc.setLocalDescription(offer); // 2-5. setLocalDescription(), local에는 자신의 offer를 세팅.
       console.log('set local sdp OK');
       return offer;
@@ -641,19 +535,6 @@ function App() {
     }
   });
 
-  const getLocalStream = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: true,
-      });
-
-      setLocalStream(stream);
-    } catch (error) {
-      console.error('Error accessing local media:', error);
-    }
-  };
-
   const handleJoined = async ({ data }) => {
     _listRooms();
     setLocalVideoElement(null, null, null, data.room, data.description);
@@ -670,19 +551,111 @@ function App() {
     }
   };
 
+  async function configure_bitrate_audio_video(mode, bitrate = 0) {
+    console.log('================ configure_bitrate_audio_video =============');
+    let feed = parseInt($('#local_feed').text());
+    if (mode === 'bitrate') {
+      let configureData = {
+        feed,
+        bitrate: bitrate,
+      };
+      console.log({
+        data: configureData,
+        _id: getId(),
+      });
+      console.log(bitrate / 1000);
+      let bitrate_label = bitrate / 1000 > 1000 ? bitrate / 1000 / 1000 + 'M' : bitrate / 1000 + 'K';
+      $('#Bandwidth_label').text(bitrate_label);
+      socket.emit('configure', {
+        data: configureData,
+        _id: getId(),
+      });
+    }
+    if (mode === 'audio') {
+      if (isAudioOn) {
+        console.log('오디오 끄기');
+        setIsAudioOn(false);
+        const audioTrack = localStream.getAudioTracks()[0];
+        if (audioTrack) {
+          // const isAudioEnabled = audioTrack.enabled;
+          audioTrack.enabled = false;
+        } else {
+          console.log('오디오 트랙을 찾을 수 없습니다.');
+        }
+      } else {
+        console.log('오디오 켜기');
+        setIsAudioOn(true);
+        const audioTrack = localStream.getAudioTracks()[0]; // 이걸 딱 누른순간,  $(document).on('click', '.audioOn, .audioOff', function () { 이게 없는 상황
+        if (audioTrack) {
+          // const isAudioEnabled = audioTrack.enabled;
+          audioTrack.enabled = true;
+        } else {
+          console.log('오디오 트랙을 찾을 수 없습니다.');
+        }
+      }
+    } else {
+      // 비디오를 끄는 것이면
+      if (isVideoOn) {
+        console.log('비디오 끄기');
+        setIsVideoOn(false);
+        // 미디어 스트림에서 비디오 트랙을 가져옵니다.
+        const videoTrack = localStream.getVideoTracks()[0];
+        // 비디오 트랙이 있는지 확인합니다.
+        if (videoTrack) {
+          // const isAudioEnabled = videoTrack.enabled;
+          videoTrack.enabled = false;
+        } else {
+          console.log('비디오 트랙을 찾을 수 없습니다.');
+        }
+
+        // try {
+        //   console.log('try something');
+        // } catch (e) {
+        //   console.log('error while doing offer for changing', e);
+        //   return;
+        // }
+      } else {
+        // 비디오를 켜는 것이면,
+        console.log('비디오 켜기');
+        setIsVideoOn(true);
+        // 미디어 스트림에서 비디오 트랙을 가져옵니다.
+        const videoTrack = localStream.getVideoTracks()[0];
+
+        if (videoTrack) {
+          // const isAudioEnabled = videoTrack.enabled;
+          videoTrack.enabled = true;
+        } else {
+          console.log('비디오 트랙을 찾을 수 없습니다.');
+        }
+
+        // try {
+        //   console.log('try something');
+        // } catch (e) {
+        //   console.log('error while doing offer for changing', e);
+        //   return;
+        // }
+      }
+    }
+  }
+
+  const getLocalStream = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
+
+      setLocalStream(stream);
+    } catch (error) {
+      console.error('Error accessing local media:', error);
+    }
+  };
   useEffect(() => {
-    console.log('1번째 useEffect 의 localStream ', localStream);
-  }, [localStream]); // localStream이 변경될 때마다 useEffect가 호출됨
-
-  useEffect(() => {
-    getLocalStream(); // 여기서 비로소 localStream에 값이 들어옴 근데 useEffect는 가장 마지막에 실행되자나?
-
-    // socket.on('joined', handleJoined);
-    console.log('2번째 useEffect 의 localStream ', localStream);
-
-    // 컴포넌트가 언마운트되면 리스너 해제
-  }, []); // useEffect 의존성 배열은 비어있음
-  console.log('useEffect 밖의 localStream >>>', localStream);
+    if (!localStream) {
+      getLocalStream();
+    }
+    // getLocalStream();
+  }, [localStream]);
 
   const contextValue = {
     displayName,
@@ -701,7 +674,6 @@ function App() {
     closeAllPCs,
     setRemoteVideoElement,
     pcMap,
-    configure_bitrate_audio_video,
     pendingOfferMap,
     subscribe,
     setIsModalVisible,
@@ -716,9 +688,30 @@ function App() {
   return (
     <AppContext.Provider value={contextValue}>
       <div className="App">{isModalVisible ? <ModalComponent /> : <Container />}</div>
-      {localStream ? <div style={{ fontSize: '50px' }}>있다</div> : <div>없다</div>}
-      {localStream && console.log('있다')}
-      {!localStream && console.log('없다')}
+
+      {/* 여기에 작성해 놓은 비디오에도 feed가 달려야함.. */}
+      <div id={`video_123`} className="video-view" style={{ position: 'relative' }}>
+        <div>{displayName}</div>
+        <video //
+          className="localVideoTag"
+          style={{
+            width: 160,
+            height: 120,
+            margin: 5,
+            backgroundColor: 'black',
+          }}
+          muted
+          autoPlay
+          ref={(localVideoRef) => {
+            if (localVideoRef) {
+              localVideoRef.srcObject = localStream;
+            }
+          }}
+        />
+        <img id="audioBtn" className={`${isAudioOn ? 'audioOn' : 'audioOff'}`} alt="audio" onClick={() => configure_bitrate_audio_video('audio')} />
+        <img id="videoBtn" className={`${isVideoOn ? 'videoOn' : 'videoOff'}`} alt="video" onClick={() => configure_bitrate_audio_video('video')} />
+      </div>
+      {/*  여기에 remotes 관련 애들이 들어올수 있도록 */}
     </AppContext.Provider>
   );
 }
