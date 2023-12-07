@@ -526,7 +526,15 @@ function App() {
       _id: getId(),
     });
   }
-
+  const handleUnpublishClick = () => {
+    if (local_feed) {
+      _unpublish({ feed: local_feed });
+      setIsPublished(false);
+    } else {
+      publishOwnFeed();
+      setIsPublished(true);
+    }
+  };
   function _switch({ from_feed, to_feed, audio = true, video = true, data = false }) {
     console.log('================ _switch =============');
     const switchData = {
