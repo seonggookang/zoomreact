@@ -389,7 +389,9 @@ function App() {
       }
     }
   }
-
+  const handleDisplayNameChange = (event) => {
+    setDisplayName(event.target.value);
+  };
   async function publishOwnFeed() {
     try {
       const offer = await doOffer(local_feed, local_display, false);
