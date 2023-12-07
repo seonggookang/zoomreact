@@ -1093,10 +1093,12 @@ function App() {
       try {
         frameRate = parseInt($('#frame_rate').val());
         console.log('========frame_rate=', $('#frame_rate').val());
-        localStream = await navigator.mediaDevices.getUserMedia({
+        const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
-          video: { frameRate: { ideal: frameRate, max: frameRate } },
+          video: true,
         });
+
+        setLocalStream(stream);
         localStream.getTracks().forEach((track) => {
           // DOM 직접 조작을 하니 바로 가져와버리지
           // 그럼 나도 리액트에서 바로가져와버려 useRef로?
