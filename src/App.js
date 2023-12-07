@@ -79,38 +79,6 @@ function App() {
     setStateOfConnect('disconnected');
   };
 
-  // connect.onclick = () => {
-  //   if (socket.connected) {
-  //     alert('already connected!');
-  //   } else {
-  //     socket.connect();
-  //   }
-  // };
-  // disconnect.onclick = () => {
-  //   if (!socket.connected) {
-  //     alert('already disconnected!');
-  //   } else {
-  //     socket.disconnect();
-  //   }
-  // };
-  // create_room.onclick = () => {
-  //   if ($('#new_room_name').val() === '') alert('생성할 방이름을 입력해야 합니다.');
-  //   else
-  //     _create({
-  //       room: generateRandomNumber(),
-  //       description: $('#new_room_name').val(),
-  //       max_publishers: 100,
-  //       audiocodec: 'opus',
-  //       videocodec: 'vp8',
-  //       talking_events: false,
-  //       talking_level_threshold: 25,
-  //       talking_packets_threshold: 100,
-  //       permanent: false,
-  //       bitrate: 128000,
-  //       secret: 'adminpwd',
-  //     });
-  // };
-
   // leave_all.onclick = () => {
   //   let evtdata = {
   //     data: { feed: $('#local_feed').text() },
@@ -1446,6 +1414,15 @@ function App() {
     }
     join({ room: room, display: displayName, token: null }); // room에는 undefined가 들어감.
   };
+  const destroyRoom = (room, description) => {
+    if (window.confirm(description + ' room을 삭제하겠습니까?')) {
+      _destroy({ room: room, permanent: false, secret: 'adminpwd' });
+    }
+  };
+
+  const handleListRooms = () => {
+    _listRooms();
+  };
 
   useEffect(() => {
     _listRooms();
@@ -1459,10 +1436,6 @@ function App() {
     };
 
     socket.on('rooms-list', handleRoomsList);
-
-    return () => {
-      socket.off('rooms-list', handleRoomsList);
-    };
   }, [socket]);
 
   const contextValue = {
@@ -1552,7 +1525,7 @@ function App() {
               </div>
             </div>
             <div className="col-6 roomsList">
-              <button id="list_rooms" type="button" className="btn btn-primary btn-xs btn_between">
+              <button id="list_rooms" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleListRooms}>
                 list_rooms
               </button>
               <button id="get_room_id" type="button" className="btn btn-primary btn-xs btn_between">
@@ -1568,6 +1541,9 @@ function App() {
                     {rooms.description} ({rooms.num_participants}/{rooms.max_publishers})
                     <button className="btn btn-primary btn-xs" onClick={() => joinRoom(rooms.room, rooms.description)}>
                       join
+                    </button>
+                    <button className="btn btn-primary btn-xs" onClick={() => destroyRoom(rooms.room, rooms.description)}>
+                      destroy
                     </button>
                     <br />
                   </div>

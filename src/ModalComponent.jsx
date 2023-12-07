@@ -18,11 +18,9 @@ const ModalComponent = () => {
     } else {
       hideModal(false);
       if (socket && !socket.connected) {
-        console.log('hi1');
         socket.connect();
         _listRooms();
       } else {
-        console.log('hi2');
         alert('already connected!');
       }
     }
