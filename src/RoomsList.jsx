@@ -76,9 +76,9 @@ const RoomsList = () => {
             <button className="btn btn-primary btn-xs" onClick={() => joinRoom(rooms.room, rooms.description)}>
               join
             </button>
-            {/* <button className="btn btn-primary btn-xs" onClick={() => destroyRoom(rooms.room, rooms.description)}>
+            <button className="btn btn-primary btn-xs" onClick={() => destroyRoom(rooms.room, rooms.description)}>
               destroy
-            </button> */}
+            </button>
             <br />
           </div>
         ))}
