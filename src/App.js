@@ -1,3 +1,5 @@
+/* global io $ connect disconnect create_room list_rooms get_room_id leave_all unpublish*/
+
 import './App.css';
 import Container from './Container';
 import ModalComponent from './ModalComponent';
@@ -23,8 +25,7 @@ function App() {
   const myName = getURLParameter('name') || randName;
   const [localStream, setLocalStream] = useState(null);
   const localVideoRef = useRef(null);
-  const [socket, _] = useState(io('https://janusc.wizbase.co.kr:4443', { autoConnect: false }));
-  // const socket = io('https://janusc.wizbase.co.kr:4443', { autoConnect: false });
+
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [roomList, setRoomList] = useState([]);
@@ -36,6 +37,47 @@ function App() {
   let local_feed;
   let local_display;
   let frameRate;
+
+  // const [socket, _] = useState(io('https://janusc.wizbase.co.kr:4443', { autoConnect: false }));
+  const socket = io('https://janusc.wizbase.co.kr:4443', { autoConnect: false });
+
+  const handleCreateRoomClick = () => {
+    if (newRoomName === '') {
+      alert('생성할 방이름을 입력해야 합니다.');
+    } else {
+      _create({
+        room: generateRandomNumber(),
+        description: $('#new_room_name').val(),
+        max_publishers: 100,
+        audiocodec: 'opus',
+        videocodec: 'vp8',
+        talking_events: false,
+        talking_level_threshold: 25,
+        talking_packets_threshold: 100,
+        permanent: false,
+        bitrate: 128000,
+        secret: 'adminpwd',
+      });
+    }
+  };
+  const handleConnectValue = () => {
+    if (socket.connected) {
+      alert('already connected!');
+    } else {
+      socket.connect();
+    }
+    setStateOfConnect('connected');
+  };
+
+  const handleDisconnectValue = () => {
+    console.log('disconnect!!!!!!!!!!!!!!');
+    if (!socket.connected) {
+      alert('already disconnected!');
+    } else {
+      socket.disconnect();
+    }
+    setStateOfConnect('disconnected');
+  };
 
   // connect.onclick = () => {
   //   if (socket.connected) {
@@ -52,7 +94,7 @@ function App() {
   //   }
   // };
   // create_room.onclick = () => {
-  //   if ($('#new_room_name').val() == '') alert('생성할 방이름을 입력해야 합니다.');
+  //   if ($('#new_room_name').val() === '') alert('생성할 방이름을 입력해야 합니다.');
   //   else
   //     _create({
   //       room: generateRandomNumber(),
@@ -68,17 +110,6 @@ function App() {
   //       secret: 'adminpwd',
   //     });
   // };
-  // list_rooms.onclick = () => {
-  //   _listRooms();
-  // };
-  // get_room_id.onclick = () => {
-  //   getRoomId('skeRoom');
-  // };
-
-  // join2.onclick = () => {
-  //   alert('join');
-  //   join();
-  // };
 
   // leave_all.onclick = () => {
   //   let evtdata = {
@@ -93,7 +124,7 @@ function App() {
   // unpublish.onclick = () => {
   //   if ($('#unpublish').text() == 'Unpublish') {
   //     if (local_feed) {
-  //       _unpublish({ feed: local_feed });  // 이 local_feed가 어디서 오는지?
+  //       _unpublish({ feed: local_feed }); // 이 local_feed가 어디서 오는지?
   //     }
   //   } else {
   //     publishOwnFeed();
@@ -110,7 +141,9 @@ function App() {
     return parseInt(randomNumber);
   }
   function getURLParameter(name) {
-    return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [, ''])[1].replace(/\+/g, '%20')) || null;
+    const regex = new RegExp(`[?|&]${name}=([^&;]+?)(&|#|;|$)`);
+    const results = regex.exec(window.location.search) || [];
+    return decodeURIComponent((results[1] || '').replace(/\+/g, '%20')) || null;
   }
 
   function destroy_room(room, desc) {
@@ -812,6 +845,7 @@ function App() {
 
     try {
       const offer = await doOffer(data.feed, data.display, false); // createOffer
+
       configure({ feed: data.feed, jsep: offer, just_configure: false }); // feed, jsep, just_configure
       console.log('data >>> ', data); // 1번의값
       console.log('data.publishers >>> ', data.publishers); // 1번의값
@@ -1451,7 +1485,7 @@ function App() {
           <div>
             <div className="col-6 myInfo">
               <div className="myInfoStyle">
-                <button type="button" className="btn btn-primary btn-xs btn_between">
+                <button id="connect" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleConnectValue}>
                   {/* <button type="button" className="btn btn-primary btn-xs btn_between" onClick={handleConnectClick} disabled={isButtonsDisabled}> */}
                   Connect
                 </button>
@@ -1493,7 +1527,7 @@ function App() {
                 <div className="btn_between">
                   <input id="new_room_name" className="form-control input-sm" type="text" placeholder="new room name" value={newRoomName} onChange={(e) => setNewRoomName(e.target.value)} />
                 </div>
-                <button id="create_room" type="button" className="btn btn-primary btn-xs btn_between">
+                <button id="create_room" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleCreateRoomClick}>
                   create_room
                 </button>
               </div>
