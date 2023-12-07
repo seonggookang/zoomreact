@@ -694,7 +694,7 @@ function App() {
       action,
       secret,
     };
-    if (action != 'disable' && token) allowData.list = [token];
+    if (action !== 'disable' && token) allowData.list = [token];
 
     console.log('allow sent as below ', getDateTime());
     console.log({
@@ -1447,6 +1447,10 @@ function App() {
     join({ room: room, display: displayName, token: null }); // room에는 undefined가 들어감.
   };
 
+  useEffect(() => {
+    _listRooms();
+  }, [roomList]);
+
   const contextValue = {
     displayName,
     isPublished,
@@ -1488,10 +1492,9 @@ function App() {
             <div className="col-6 myInfo">
               <div className="myInfoStyle">
                 <button id="connect" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleConnectValue}>
-                  {/* <button type="button" className="btn btn-primary btn-xs btn_between" onClick={handleConnectClick} disabled={isButtonsDisabled}> */}
                   Connect
                 </button>
-                <button id="disconnect" type="button" className="btn btn-primary btn-xs btn_between">
+                <button id="disconnect" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleDisconnectValue}>
                   Disconnect
                 </button>
                 <div className="btn_between">
@@ -1544,6 +1547,7 @@ function App() {
               <br />
               <br />
               <div className="roomNameNumber">room이름(현재 참가자수/최대 참가자수)</div>
+
               <div id="room_list" className="btn_between">
                 {roomList.map((rooms) => (
                   <div key={rooms.room}>
@@ -1557,7 +1561,6 @@ function App() {
               </div>
             </div>
             <div id="videos" className="displayFlex">
-              <span className="fontSize"> -- LOCALS -- </span>
               <div id="locals"></div>
               <div id="remotes" className="remotes"></div>
             </div>
