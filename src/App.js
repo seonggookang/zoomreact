@@ -1005,37 +1005,37 @@ function App() {
     console.log(data);
   });
 
-  socket.on('rooms-list', ({ data }) => {
-    var parsedData = JSON.parse(data);
-    console.log('rooms list', parsedData);
-    console.log(typeof parsedData);
-    $('#room_list').html('');
-    parsedData.forEach((rooms) => {
-      $('#room_list').html(
-        $('#room_list').html() +
-          "<br><span class='room' room='" +
-          rooms.room +
-          "'>" +
-          rooms.description +
-          '</span>(' +
-          rooms.num_participants +
-          '/' +
-          rooms.max_publishers +
-          ")&nbsp;<button class='btn btn-primary btn-xs' room='" +
-          rooms.room +
-          "' onclick='join22(" +
-          rooms.room +
-          ', "' +
-          rooms.description +
-          '");\'>join</button>&nbsp;' +
-          "<button class='btn btn-primary btn-xs' onclick='destroy_room(" +
-          rooms.room +
-          ', "' +
-          rooms.description +
-          '");\'>destroy</button>'
-      );
-    });
-  });
+  // socket.on('rooms-list', ({ data }) => {
+  //   var parsedData = JSON.parse(data);
+  //   console.log('rooms list', parsedData);
+  //   console.log(typeof parsedData);
+  //   $('#room_list').html('');
+  //   parsedData.forEach((rooms) => {
+  //     $('#room_list').html(
+  //       $('#room_list').html() +
+  //         "<br><span class='room' room='" +
+  //         rooms.room +
+  //         "'>" +
+  //         rooms.description +
+  //         '</span>(' +
+  //         rooms.num_participants +
+  //         '/' +
+  //         rooms.max_publishers +
+  //         ")&nbsp;<button class='btn btn-primary btn-xs' room='" +
+  //         rooms.room +
+  //         "' onclick='join22(" +
+  //         rooms.room +
+  //         ', "' +
+  //         rooms.description +
+  //         '");\'>join</button>&nbsp;' +
+  //         "<button class='btn btn-primary btn-xs' onclick='destroy_room(" +
+  //         rooms.room +
+  //         ', "' +
+  //         rooms.description +
+  //         '");\'>destroy</button>'
+  //     );
+  //   });
+  // });
 
   socket.on('created', ({ data }) => {
     if (data.room == -1) {
@@ -1450,6 +1450,20 @@ function App() {
   useEffect(() => {
     _listRooms();
   }, [roomList]);
+
+  useEffect(() => {
+    const handleRoomsList = ({ data }) => {
+      let parsedData = JSON.parse(data);
+      console.log('rooms list >>> ', parsedData);
+      setRoomList(parsedData);
+    };
+
+    socket.on('rooms-list', handleRoomsList);
+
+    return () => {
+      socket.off('rooms-list', handleRoomsList);
+    };
+  }, [socket]);
 
   const contextValue = {
     displayName,
