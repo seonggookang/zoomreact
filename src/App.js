@@ -1039,9 +1039,11 @@ function App() {
 
   socket.on('created', ({ data }) => {
     if (data.room == -1) {
+      console.log('111');
       alert('room 이 중복되었습니다.');
       return;
     } else {
+      console.log('222');
       console.log('room created', data);
       $('#new_room_name').val('');
       _listRooms();
