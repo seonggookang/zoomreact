@@ -1392,6 +1392,14 @@ function App() {
   ////////////////////////////////////////////////////////
   // end
   ////////////////////////////////////////////////////////
+  const joinRoom = (room, description) => {
+    console.log(`Joining room ${room} - ${description}`);
+    if (displayName === '') {
+      alert('참석할 이름을 입력해야 합니다.');
+      return;
+    }
+    join({ room: room, display: displayName, token: null }); // room에는 undefined가 들어감.
+  };
 
   const contextValue = {
     displayName,
@@ -1433,11 +1441,11 @@ function App() {
           <div>
             <div className="col-6 myInfo">
               <div className="myInfoStyle">
-                <button type="button" className="btn btn-primary btn-xs btn_between" onClick={handleConnectValue}>
+                <button type="button" className="btn btn-primary btn-xs btn_between">
                   {/* <button type="button" className="btn btn-primary btn-xs btn_between" onClick={handleConnectClick} disabled={isButtonsDisabled}> */}
                   Connect
                 </button>
-                <button id="disconnect" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleDisconnectValue}>
+                <button id="disconnect" type="button" className="btn btn-primary btn-xs btn_between">
                   Disconnect
                 </button>
                 <div className="btn_between">
@@ -1449,7 +1457,7 @@ function App() {
                   <div>참석할 이름</div>
                 </div>
                 <div className="btn_between">
-                  <input type="text" className="form-control input-sm myInput" placeholder="참석할 이름" value={displayName} onChange={handleDisplayNameChange} />
+                  <input type="text" className="form-control input-sm myInput" placeholder="참석할 이름" value={displayName} />
                 </div>
               </div>
               <div className="myInfoStyle">
@@ -1475,7 +1483,7 @@ function App() {
                 <div className="btn_between">
                   <input id="new_room_name" className="form-control input-sm" type="text" placeholder="new room name" value={newRoomName} onChange={(e) => setNewRoomName(e.target.value)} />
                 </div>
-                <button id="create_room" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleCreateRoomClick}>
+                <button id="create_room" type="button" className="btn btn-primary btn-xs btn_between">
                   create_room
                 </button>
               </div>

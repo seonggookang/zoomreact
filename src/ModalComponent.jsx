@@ -19,7 +19,7 @@ const ModalComponent = () => {
       hideModal(false);
       if (socket && !socket.connected) {
         console.log('hi1');
-        socket.connect(); // 이걸 useEffect 안에다가?
+        socket.connect();
         _listRooms();
       } else {
         console.log('hi2');
