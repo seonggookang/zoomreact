@@ -1,4 +1,4 @@
-/* global io $ connect disconnect create_room list_rooms get_room_id leave_all unpublish*/
+/* global io $ connect disconnect list_rooms get_room_id leave_all unpublish*/
 
 import './App.css';
 import Container from './Container';
@@ -15,15 +15,14 @@ function App() {
   const [displayName, setDisplayName] = useState('');
   const [isPublished, setIsPublished] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(true);
-  // function getURLParameter(name) {
-  //   return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(window.location.search) || [, ''])[1].replace(/\+/g, '%20')) || null;
-  // }
+
+  const createRoomButtonRef = useRef();
   const [newRoomName, setNewRoomName] = useState('');
   let myRoom = getURLParameter('room') ? parseInt(getURLParameter('room')) : getURLParameter('room_str') || 1234;
   const location = useLocation();
   const randName = 'John_Doe_' + Math.floor(10000 * Math.random());
   const myName = getURLParameter('name') || randName;
-  const [localStream, setLocalStream] = useState(null);
+  const [localStream, setLocalStream] = useState('');
   const localVideoRef = useRef(null);
 
   const [isAudioOn, setIsAudioOn] = useState(true);
@@ -60,6 +59,7 @@ function App() {
       });
     }
   };
+
   const handleConnectValue = () => {
     if (socket.connected) {
       alert('already connected!');
@@ -229,12 +229,12 @@ function App() {
     if (jsep) pendingOfferMap.set(configId, { feed });
   }
 
-  $(document).on('click', '.audioOn, .audioOff', function () {
-    configure_bitrate_audio_video('audio');
-  });
-  $(document).on('click', '.videoOn, .videoOff', function () {
-    configure_bitrate_audio_video('video');
-  });
+  // $(document).on('click', '.audioOn, .audioOff', function () {
+  //   configure_bitrate_audio_video('audio');
+  // });
+  // $(document).on('click', '.videoOn, .videoOff', function () {
+  //   configure_bitrate_audio_video('video');
+  // });
 
   async function configure_bitrate_audio_video(mode, bitrate = 0) {
     console.log('mode >>> ', mode); // video, audio
@@ -747,8 +747,8 @@ function App() {
     $('#connect_status').val('connected');
     _listRooms();
     $('#connect').prop('disabled', true);
-    $('#disconnect, #create_room, #list_rooms').prop('disabled', false);
-
+    $('#disconnect, #list_rooms').prop('disabled', false);
+    createRoomButtonRef.current.disabled = false;
     socket.sendBuffer = [];
     // var display_name = $('#myInput').val();
     // join({room: 1264989511454137, display:display_name, token:null});
@@ -762,7 +762,8 @@ function App() {
     $('#connect_status').val('disconnected');
     $('#room_list').html('');
     $('#connect').prop('disabled', false);
-    $('#disconnect, #create_room, #list_rooms, #leave_all').prop('disabled', true);
+    $('#disconnect,  #list_rooms, #leave_all').prop('disabled', true);
+    createRoomButtonRef.current.disabled = true;
     pendingOfferMap.clear();
     removeAllVideoElements();
     closeAllPCs();
@@ -798,9 +799,10 @@ function App() {
   });
 
   // 1번, 2번 모두 자신의 feed를 여기서 알게돼고 feed로 서로를 구분함.
+  // 이 joined가 실행이 안되는중.. 그럼 socket.emit('join'이 안되고 있다는 소리 아님??)
   socket.on('joined', async ({ data }) => {
     // room, feed, description, private_id, publishers, display
-    // 클라에게 joined 젆송
+    // 클라에게 joined 전송
     console.log('joined to room ', getDateTime());
     console.log('joined data >>> ', data);
     $('#local_feed').text(data.feed);
@@ -813,10 +815,8 @@ function App() {
 
     try {
       const offer = await doOffer(data.feed, data.display, false); // createOffer
-
       configure({ feed: data.feed, jsep: offer, just_configure: false }); // feed, jsep, just_configure
-      console.log('data >>> ', data); // 1번의값
-      console.log('data.publishers >>> ', data.publishers); // 1번의값
+      console.log('data.publishers >>> ', data.publishers); // 상대들
       subscribeTo(data.publishers, data.room); // 2번에서 진행. 1번에서 안 생김.
       // var vidTrack = localStream.getVideoTracks();
       // vidTrack.forEach((track) => (track.enabled = true));
@@ -981,7 +981,7 @@ function App() {
   //   parsedData.forEach((rooms) => {
   //     $('#room_list').html(
   //       $('#room_list').html() +
-  //         "<br><span class='room' room='" +
+  //         "<br><span className='room' room='" +
   //         rooms.room +
   //         "'>" +
   //         rooms.description +
@@ -989,14 +989,14 @@ function App() {
   //         rooms.num_participants +
   //         '/' +
   //         rooms.max_publishers +
-  //         ")&nbsp;<button class='btn btn-primary btn-xs' room='" +
+  //         ")&nbsp;<button className='btn btn-primary btn-xs' room='" +
   //         rooms.room +
   //         "' onclick='join22(" +
   //         rooms.room +
   //         ', "' +
   //         rooms.description +
   //         '");\'>join</button>&nbsp;' +
-  //         "<button class='btn btn-primary btn-xs' onclick='destroy_room(" +
+  //         "<button className='btn btn-primary btn-xs' onclick='destroy_room(" +
   //         rooms.room +
   //         ', "' +
   //         rooms.description +
@@ -1006,12 +1006,13 @@ function App() {
   // });
 
   socket.on('created', ({ data }) => {
-    if (data.room == -1) {
+    console.log('안나오는중');
+    if (data.room === -1) {
       console.log('111');
       alert('room 이 중복되었습니다.');
       return;
     } else {
-      console.log('222');
+      console.log('222222');
       console.log('room created', data);
       $('#new_room_name').val('');
       _listRooms();
@@ -1094,26 +1095,27 @@ function App() {
         frameRate = parseInt($('#frame_rate').val());
         console.log('========frame_rate=', $('#frame_rate').val());
         const stream = await navigator.mediaDevices.getUserMedia({
+          // 비동기 함수!~!!!!!!!!
           audio: true,
           video: true,
         });
 
-        setLocalStream(stream);
-        localStream.getTracks().forEach((track) => {
-          // DOM 직접 조작을 하니 바로 가져와버리지
-          // 그럼 나도 리액트에서 바로가져와버려 useRef로?
-          pc.addTrack(track, localStream);
+        setLocalStream(stream); // 이거를 해서 전체적으로 업데이트가 돼야하는데..
+
+        // localStream.getTracks().forEach((track) => { 이렇게 해서 동작이 되게 하고 싶다
+        // 근데 setLocalStream 이 비동기 처리 함수라 바로 값이 불러와 지지 않는다.
+        // 이부분 어쩔수 없이 useRef로 직접 조작을 해야만 하는가?
+
+        console.log('localStream >>> ', localStream);
+
+        stream.getTracks().forEach((track) => {
+          // 이게 실행되기전에 localStream이 정상적으로 업데이트 돼야함!!
+          // 이게 localStream이 되어야 한다..
+          pc.addTrack(track, stream); // 이게 localStream이 되어야 한다..
           console.log('adding track >>> ', track, track.kind);
-          // if (track.kind == 'audio') {
-          //   local_audio_sender = pc.addTrack(track, localStream);
-          //   console.log('local_audio_sender >> ', local_audio_sender)
-          // } else {
-          //   local_video_sender = pc.addTrack(track, localStream);
-          //   console.log('local_video_sender >> ', local_video_sender)
-          // }
         });
 
-        setLocalVideoElement(localStream, feed, display);
+        setLocalVideoElement(stream, feed, display); // 이게 localStream이 되어야 한다..
       } catch (e) {
         console.log('error while doing offer', e);
         removeVideoElementByFeed(feed);
@@ -1219,7 +1221,7 @@ function App() {
         localVideoStreamElem.autoplay = true;
         localVideoStreamElem.muted = 'muted';
         localVideoStreamElem.classList.add('localVideoTag');
-        localVideoStreamElem.style.cssText = '-moz-transform: scale(-1, 1); -webkit-transform: scale(-1, 1); -o-transform: scale(-1, 1); transform: scale(-1, 1); filter: FlipH;';
+        // localVideoStreamElem.style.cssText = '-moz-transform: scale(-1, 1); -webkit-transform: scale(-1, 1); -o-transform: scale(-1, 1); transform: scale(-1, 1); filter: FlipH;';
         localVideoStreamElem.srcObject = localStream;
 
         const localVideoContainer = document.createElement('div');
@@ -1243,7 +1245,6 @@ function App() {
         localVideoContainer.appendChild(localVideoOnOffElem);
 
         document.getElementById('locals').appendChild(localVideoContainer);
-        $('#local_buttons').show();
       }
     } else {
       const localVideoContainer = document.getElementById('video_' + feed);
@@ -1267,7 +1268,7 @@ function App() {
       nameElem.style.cssText = 'color: #fff; font-size: 0.8rem;';
 
       const remoteVideoStreamElem = document.createElement('video');
-      if (display == 'share') {
+      if (display === 'share') {
         console.log(display, display, display);
         nameElem.innerHTML = '';
         // remoteVideoStreamElem.width = 1224;  //320
@@ -1293,7 +1294,7 @@ function App() {
       remoteVideoContainer.appendChild(nameElem);
       remoteVideoContainer.appendChild(remoteVideoStreamElem);
 
-      if (display == 'share') {
+      if (display === 'share') {
         document.getElementById('screen').appendChild(remoteVideoContainer);
       } else {
         document.getElementById('remotes').appendChild(remoteVideoContainer);
@@ -1302,7 +1303,7 @@ function App() {
       const remoteVideoContainer = document.getElementById('video_' + feed);
       if (display) {
         const nameElem = remoteVideoContainer.getElementsByTagName('div')[0];
-        if (display == 'share') {
+        if (display === 'share') {
           nameElem.innerHTML = '';
         } else {
           nameElem.innerHTML = display;
@@ -1312,9 +1313,7 @@ function App() {
         console.log('======== remoteStream ============', feed);
         console.log(remoteStream);
         const remoteVideoStreamElem = remoteVideoContainer.getElementsByTagName('video')[0];
-        console.log('remoteVideoStreamElem[0] 전 >>> ', remoteVideoStreamElem);
         remoteVideoStreamElem.srcObject = remoteStream;
-        console.log('remoteVideoStreamElem[0] 후 >>> ', remoteVideoStreamElem);
       }
     }
   }
@@ -1388,26 +1387,6 @@ function App() {
     return date_time;
   }
 
-  ///////////////////////////////////////////////////////////
-  // custom emit messages to send to the Server
-  ///////////////////////////////////////////////////////////
-  function getRoomId(roomName) {
-    console.log('================ getRoomId =============');
-    _listRooms();
-    console.log($('#room_list').find('.room').length);
-    var roomList = $('#room_list').find('.room');
-    console.log('roomList=', roomList);
-    roomList.forEach((room) => {
-      console.log('room=', room);
-      var roomId = room.attr('room');
-      var roomName = room.text();
-      console.log('roomId=', roomId, '    roomName=', roomName);
-    });
-  }
-
-  ////////////////////////////////////////////////////////
-  // end
-  ////////////////////////////////////////////////////////
   const joinRoom = (room, description) => {
     console.log(`Joining room ${room} - ${description}`);
     if (displayName === '') {
@@ -1416,6 +1395,7 @@ function App() {
     }
     join({ room: room, display: displayName, token: null }); // room에는 undefined가 들어감.
   };
+
   const destroyRoom = (room, description) => {
     if (window.confirm(description + ' room을 삭제하겠습니까?')) {
       _destroy({ room: room, permanent: false, secret: 'adminpwd' });
@@ -1440,35 +1420,15 @@ function App() {
     socket.on('rooms-list', handleRoomsList);
   }, [socket]);
 
+  useEffect(() => {});
+
   const contextValue = {
     displayName,
-    isPublished,
     setDisplayName,
     handleDisplayNameChange,
-    localStream,
-    setLocalStream,
-    socket,
-    getDateTime,
-    getId,
-    _listRooms,
-    doOffer,
-    doAnswer,
-    closePC,
-    closeAllPCs,
-    setRemoteVideoElement,
-    pcMap,
-    pendingOfferMap,
-    subscribe,
     setIsModalVisible,
-    myRoom,
-    myName,
-    generateRandomNumber,
-    join,
-    publishOwnFeed,
-    handleUnpublishClick,
-    isAudioOn,
-    isVideoOn,
-    configure_bitrate_audio_video,
+    socket,
+    _listRooms,
   };
 
   return (
@@ -1477,87 +1437,105 @@ function App() {
         {isModalVisible ? (
           <ModalComponent />
         ) : (
-          <div>
-            <div className="col-6 myInfo">
-              <div className="myInfoStyle">
-                <button id="connect" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleConnectValue}>
-                  Connect
-                </button>
-                <button id="disconnect" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleDisconnectValue}>
-                  Disconnect
-                </button>
-                <div className="btn_between">
-                  <input type="text" className="form-control input-sm" disabled id="connect_status" value={stateOfConnect} />
-                </div>
-              </div>
-              <div className="myInfoStyle">
-                <div className="btn_between">
-                  <div>참석할 이름</div>
-                </div>
-                <div className="btn_between">
-                  <input type="text" className="form-control input-sm myInput" placeholder="참석할 이름" value={displayName} />
-                </div>
-              </div>
-              <div className="myInfoStyle">
-                <div className=" btn_between">
-                  <div>비디오 프레임</div>
-                </div>
-                <div className="btn_between">
-                  <input type="text" className="form-control input-sm" id="frame_rate" defaultValue="15" />
-                </div>
-              </div>
-              <div className="myInfoStyle">
-                <div className="btn_between">
-                  <div>현재 방이름</div>
-                </div>
-                <div className="btn_between">
-                  <input type="text" className="form-control input-sm" id="curr_room_name" />
-                </div>
-                <button id="leave_all" type="button" className="btn btn-primary btn-xs btn_between left_status">
-                  leaveAll
-                </button>
-              </div>
-              <div className="myInfoStyle">
-                <div className="btn_between">
-                  <input id="new_room_name" className="form-control input-sm" type="text" placeholder="new room name" value={newRoomName} onChange={(e) => setNewRoomName(e.target.value)} />
-                </div>
-                <button id="create_room" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleCreateRoomClick}>
-                  create_room
-                </button>
-              </div>
-            </div>
-            <div className="col-6 roomsList">
-              <button id="list_rooms" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleListRooms}>
-                list_rooms
-              </button>
-              <button id="get_room_id" type="button" className="btn btn-primary btn-xs btn_between">
-                get_room_id
-              </button>
-              <br />
-              <br />
-              <div className="roomNameNumber">room이름(현재 참가자수/최대 참가자수)</div>
+          <section className="content">
+            <div className="container-fluid">
+              <div className="row">
+                <div className="col-12">
+                  <div className="card" style={{ backgroundColor: 'rgb(145, 145, 145)' }}>
+                    <div className="col-12">
+                      <div className="row displayFlex">
+                        <div className="col-6 myInfo">
+                          <div className="myInfoStyle">
+                            <button id="connect" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleConnectValue}>
+                              Connect
+                            </button>
+                            <button id="disconnect" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleDisconnectValue}>
+                              Disconnect
+                            </button>
+                            <div className="btn_between">
+                              <input type="text" className="form-control input-sm" disabled id="connect_status" defaultValue={stateOfConnect} />
+                            </div>
+                          </div>
+                          <div className="myInfoStyle">
+                            <div className="btn_between">
+                              <div>참석할 이름</div>
+                            </div>
+                            <div className="btn_between">
+                              <input type="text" className="form-control input-sm myInput" placeholder="참석할 이름" defaultValue={displayName} />
+                            </div>
+                          </div>
+                          <div className="myInfoStyle">
+                            <div className=" btn_between">
+                              <div>비디오 프레임</div>
+                            </div>
+                            <div className="btn_between">
+                              <input type="text" className="form-control input-sm" id="frame_rate" defaultValue="15" />
+                            </div>
+                          </div>
+                          <div className="myInfoStyle">
+                            <div className="btn_between">
+                              <div>현재 방이름</div>
+                            </div>
+                            <div className="btn_between">
+                              <input type="text" className="form-control input-sm" id="curr_room_name" />
+                            </div>
+                            <button id="leave_all" type="button" className="btn btn-primary btn-xs btn_between left_status">
+                              leaveAll
+                            </button>
+                          </div>
+                          <div className="myInfoStyle">
+                            <div className="btn_between">
+                              <input
+                                id="new_room_name"
+                                className="form-control input-sm"
+                                type="text"
+                                placeholder="new room name"
+                                value={newRoomName}
+                                onChange={(e) => setNewRoomName(e.target.value)}
+                              />
+                            </div>
+                            <button ref={createRoomButtonRef} type="button" className="btn btn-primary btn-xs btn_between" onClick={handleCreateRoomClick}>
+                              create_room
+                            </button>
+                          </div>
+                        </div>
+                        <div className="col-6 roomsList">
+                          <button id="list_rooms" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleListRooms}>
+                            list_rooms
+                          </button>
+                          <button id="get_room_id" type="button" className="btn btn-primary btn-xs btn_between">
+                            get_room_id
+                          </button>
+                          <br />
+                          <br />
+                          <div className="roomNameNumber">room이름(현재 참가자수/최대 참가자수)</div>
 
-              <div id="room_list" className="btn_between">
-                {roomList.map((rooms) => (
-                  <div key={rooms.room}>
-                    {rooms.description} ({rooms.num_participants}/{rooms.max_publishers})
-                    <button className="btn btn-primary btn-xs" onClick={() => joinRoom(rooms.room, rooms.description)}>
-                      join
-                    </button>
-                    <button className="btn btn-primary btn-xs" onClick={() => destroyRoom(rooms.room, rooms.description)}>
-                      destroy
-                    </button>
-                    <br />
+                          <div id="room_list" className="btn_between">
+                            {roomList.map((rooms) => (
+                              <div key={rooms.room}>
+                                {rooms.description} ({rooms.num_participants}/{rooms.max_publishers})
+                                <button className="btn btn-primary btn-xs" onClick={() => joinRoom(rooms.room, rooms.description)}>
+                                  join
+                                </button>
+                                <button className="btn btn-primary btn-xs" onClick={() => destroyRoom(rooms.room, rooms.description)}>
+                                  destroy
+                                </button>
+                                <br />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div id="videos" className="displayFlex">
+                          <div id="locals"></div>
+                          <div id="remotes" className="remotes"></div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ))}
+                </div>
               </div>
             </div>
-            <div id="videos" className="displayFlex">
-              <div id="locals"></div>
-              <div id="remotes" className="remotes"></div>
-            </div>
-            {/* <Videos /> */}
-          </div>
+          </section>
         )}
       </div>
     </AppContext.Provider>
