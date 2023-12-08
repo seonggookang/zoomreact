@@ -241,7 +241,7 @@ function App() {
     console.log('================ configure_bitrate_audio_video =============');
     var feed = parseInt($('#local_feed').text());
 
-    if (mode == 'bitrate') {
+    if (mode === 'bitrate') {
       var configureData = {
         feed,
         bitrate: bitrate,
@@ -258,10 +258,11 @@ function App() {
         data: configureData,
         _id: getId(),
       });
-    } else if (mode == 'audio') {
+    } else if (mode === 'audio') {
       // 오디오를 끄는 것이면,
+      setIsAudioOn(false);
       if ($('#audioBtn').hasClass('audioOn')) {
-        $('#audioBtn').removeClass('audioOn').addClass('audioOff');
+        // $('#audioBtn').removeClass('audioOn').addClass('audioOff');
 
         console.log('오디오 끄기');
 
@@ -291,7 +292,8 @@ function App() {
         }
       } else {
         // 오디오를 켜는 것이면,
-        $('#audioBtn').removeClass('audioOff').addClass('audioOn');
+        setIsAudioOn(true);
+        // $('#audioBtn').removeClass('audioOff').addClass('audioOn');
 
         console.log('오디오 켜기');
         const audioTrack = localStream.getAudioTracks()[0];
@@ -323,13 +325,14 @@ function App() {
         }
       }
     } else {
+      // 비디오를 끄는 것이면
+      setIsVideoOn(false);
       if ($('#videoBtn').hasClass('videoOn')) {
-        // 비디오를 끄는 것이면
-        $('#videoBtn').removeClass('videoOn').addClass('videoOff');
+        // $('#videoBtn').removeClass('videoOn').addClass('videoOff');
 
         console.log('비디오 끄기');
         // 미디어 스트림에서 비디오 트랙을 가져옵니다.
-        const videoTrack = localStream.getVideoTracks()[0];
+        const videoTrack = localStream.getVideoTracks()[0]; // 이게 업데이트가 안되는중...
 
         // 비디오 트랙이 있는지 확인합니다.
         if (videoTrack) {
@@ -357,7 +360,8 @@ function App() {
         }
       } else {
         // 비디오를 켜는 것이면,
-        $('#videoBtn').removeClass('videoOff').addClass('videoOn');
+        setIsVideoOn(true);
+        // $('#videoBtn').removeClass('videoOff').addClass('videoOn');
 
         console.log('비디오 켜기');
         // 미디어 스트림에서 비디오 트랙을 가져옵니다.
@@ -1005,20 +1009,6 @@ function App() {
   //   });
   // });
 
-  socket.on('created', ({ data }) => {
-    console.log('안나오는중');
-    if (data.room === -1) {
-      console.log('111');
-      alert('room 이 중복되었습니다.');
-      return;
-    } else {
-      console.log('222222');
-      console.log('room created', data);
-      $('#new_room_name').val('');
-      _listRooms();
-    }
-  });
-
   socket.on('destroyed', ({ data }) => {
     console.log('room destroyed', data);
     _listRooms();
@@ -1228,19 +1218,27 @@ function App() {
         localVideoContainer.id = 'video_' + feed; ///
         localVideoContainer.appendChild(nameElem);
         localVideoContainer.appendChild(localVideoStreamElem);
-        // localVideoContainer.appendChild(localBlankPersonElem);
+
         localVideoContainer.classList.add('video-view');
         localVideoContainer.style.cssText = 'position: relative;';
 
         const localAudioOnOffElem = document.createElement('img');
         localAudioOnOffElem.id = 'audioBtn';
-        // localAudioOnOffElem.src = "/img/ui_btn_audioOn.png";
         localAudioOnOffElem.classList.add('audioOn');
+        localAudioOnOffElem.addEventListener('click', () => {
+          configure_bitrate_audio_video('audio');
+        });
 
         const localVideoOnOffElem = document.createElement('img');
         localVideoOnOffElem.id = 'videoBtn';
-        // localVideoOnOffElem.src = "/img/ui_btn_videoOn.png";
         localVideoOnOffElem.classList.add('videoOn');
+        localVideoOnOffElem.addEventListener('click', () => {
+          configure_bitrate_audio_video('video');
+        });
+
+        // const localAudioOnOffElem = <img id="audioBtn" className={isAudioOn ? 'audioOn' : 'audioOff'} alt="audio" onClick={() => configure_bitrate_audio_video('audio')} />;
+        // const localVideoOnOffElem = <img id="videoBtn" className={isVideoOn ? 'videoOn' : 'videoOff'} alt="video" onClick={() => configure_bitrate_audio_video('video')} />;
+
         localVideoContainer.appendChild(localAudioOnOffElem);
         localVideoContainer.appendChild(localVideoOnOffElem);
 
@@ -1420,7 +1418,31 @@ function App() {
     socket.on('rooms-list', handleRoomsList);
   }, [socket]);
 
-  useEffect(() => {});
+  useEffect(() => {
+    const stream = navigator.mediaDevices.getUserMedia({
+      // 비동기 함수!~!!!!!!!!
+      audio: true,
+      video: true,
+    });
+
+    setLocalStream(stream);
+  }, []);
+
+  useEffect(() => {
+    socket.on('created', ({ data }) => {
+      console.log('안나오는중');
+      if (data.room === -1) {
+        console.log('111');
+        alert('room 이 중복되었습니다.');
+        return;
+      } else {
+        console.log('222222');
+        console.log('room created', data);
+        $('#new_room_name').val('');
+        _listRooms();
+      }
+    });
+  });
 
   const contextValue = {
     displayName,
