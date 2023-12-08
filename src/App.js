@@ -17,7 +17,6 @@ function App() {
   const [isModalVisible, setIsModalVisible] = useState(true);
 
   const createRoomButtonRef = useRef();
-  const [newRoomName, setNewRoomName] = useState('');
   let myRoom = getURLParameter('room') ? parseInt(getURLParameter('room')) : getURLParameter('room_str') || 1234;
   const location = useLocation();
   const randName = 'John_Doe_' + Math.floor(10000 * Math.random());
@@ -27,6 +26,7 @@ function App() {
 
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
+  const [newRoomName, setNewRoomName] = useState('');
   const [roomList, setRoomList] = useState([]);
   const [buttonsDisabled, setButtonsDisabled] = useState(true);
 
@@ -40,73 +40,6 @@ function App() {
   // const [socket, _] = useState(io('https://janusc.wizbase.co.kr:4443', { autoConnect: false }));
   const socket = io('https://janusc.wizbase.co.kr:4443', { autoConnect: false });
 
-  const handleCreateRoomClick = () => {
-    if (newRoomName === '') {
-      alert('생성할 방이름을 입력해야 합니다.');
-    } else
-      _create({
-        room: generateRandomNumber(),
-        description: $('#new_room_name').val(),
-        max_publishers: 100,
-        audiocodec: 'opus',
-        videocodec: 'vp8',
-        talking_events: false,
-        talking_level_threshold: 25,
-        talking_packets_threshold: 100,
-        permanent: false,
-        bitrate: 128000,
-        secret: 'adminpwd',
-      });
-  };
-
-  const _create = ({
-    room,
-    description,
-    max_publishers = 6,
-    audiocodec = 'opus',
-    videocodec = 'vp8',
-    talking_events = false,
-    talking_level_threshold = 25,
-    talking_packets_threshold = 100,
-    permanent = false,
-    bitrate = 128000,
-  }) => {
-    console.log('================ _create =============');
-    console.log('create sent as below ', getDateTime());
-    console.log({
-      data: {
-        room,
-        description,
-        max_publishers,
-        audiocodec,
-        videocodec,
-        talking_events,
-        talking_level_threshold,
-        talking_packets_threshold,
-        permanent,
-        bitrate,
-        secret: 'adminpwd',
-      },
-      _id: getId(),
-    });
-    socket.emit('create', {
-      data: {
-        room,
-        description,
-        max_publishers,
-        audiocodec,
-        videocodec,
-        talking_events,
-        talking_level_threshold,
-        talking_packets_threshold,
-        permanent,
-        bitrate,
-        secret: 'adminpwd',
-      },
-      _id: getId(),
-    });
-  };
-
   const handleConnectValue = () => {
     if (socket.connected) {
       alert('already connected!');
@@ -117,7 +50,6 @@ function App() {
   };
 
   const handleDisconnectValue = () => {
-    console.log('disconnect!!!!!!!!!!!!!!');
     if (!socket.connected) {
       alert('already disconnected!');
     } else {
@@ -284,7 +216,6 @@ function App() {
   // });
 
   async function configure_bitrate_audio_video(mode, bitrate = 0) {
-    console.log('mode >>> ', mode); // video, audio
     console.log('================ configure_bitrate_audio_video =============');
     var feed = parseInt($('#local_feed').text());
 
@@ -305,7 +236,8 @@ function App() {
         data: configureData,
         _id: getId(),
       });
-    } else if (mode === 'audio') {
+    }
+    if (mode === 'audio') {
       // 오디오를 끄는 것이면,
       setIsAudioOn(false);
       if ($('#audioBtn').hasClass('audioOn')) {
@@ -371,20 +303,22 @@ function App() {
           return;
         }
       }
-    } else {
+    }
+    if (mode === 'video') {
       // 비디오를 끄는 것이면
-      setIsVideoOn(false);
+      // setIsVideoOn(false);
       if ($('#videoBtn').hasClass('videoOn')) {
-        // $('#videoBtn').removeClass('videoOn').addClass('videoOff');
+        $('#videoBtn').removeClass('videoOn').addClass('videoOff');
 
         console.log('비디오 끄기');
+
         // 미디어 스트림에서 비디오 트랙을 가져옵니다.
         const videoTrack = localStream.getVideoTracks()[0]; // 이게 업데이트가 안되는중...
-
         // 비디오 트랙이 있는지 확인합니다.
         if (videoTrack) {
           // 비디오를 끄거나 켤 수 있는 상태인지 확인합니다.
           const isVideoEnabled = videoTrack.enabled;
+          console.log('videoTrack >>> ', videoTrack);
 
           if (isVideoEnabled) {
             // 비디오를 끕니다.
@@ -407,8 +341,8 @@ function App() {
         }
       } else {
         // 비디오를 켜는 것이면,
-        setIsVideoOn(true);
-        // $('#videoBtn').removeClass('videoOff').addClass('videoOn');
+        // setIsVideoOn(true);
+        $('#videoBtn').removeClass('videoOff').addClass('videoOn');
 
         console.log('비디오 켜기');
         // 미디어 스트림에서 비디오 트랙을 가져옵니다.
@@ -444,6 +378,7 @@ function App() {
   const handleDisplayNameChange = (event) => {
     setDisplayName(event.target.value);
   };
+
   async function publishOwnFeed() {
     try {
       const offer = await doOffer(local_feed, local_display, false);
@@ -636,54 +571,6 @@ function App() {
     });
   }
 
-  // function _create({
-  //   room,
-  //   description,
-  //   max_publishers = 6,
-  //   audiocodec = 'opus',
-  //   videocodec = 'vp8',
-  //   talking_events = false,
-  //   talking_level_threshold = 25,
-  //   talking_packets_threshold = 100,
-  //   permanent = false,
-  //   bitrate = 128000,
-  // }) {
-  //   console.log('================ _create =============');
-  //   console.log('create sent as below ', getDateTime());
-  //   console.log({
-  //     data: {
-  //       room,
-  //       description,
-  //       max_publishers,
-  //       audiocodec,
-  //       videocodec,
-  //       talking_events,
-  //       talking_level_threshold,
-  //       talking_packets_threshold,
-  //       permanent,
-  //       bitrate,
-  //       secret: 'adminpwd',
-  //     },
-  //     _id: getId(),
-  //   });
-  //   socket.emit('create', {
-  //     data: {
-  //       room,
-  //       description,
-  //       max_publishers,
-  //       audiocodec,
-  //       videocodec,
-  //       talking_events,
-  //       talking_level_threshold,
-  //       talking_packets_threshold,
-  //       permanent,
-  //       bitrate,
-  //       secret: 'adminpwd',
-  //     },
-  //     _id: getId(),
-  //   });
-  // }
-
   function _destroy({ room = myRoom, permanent = false, secret = 'adminpwd' }) {
     console.log('================ _destroy =============');
     console.log('destroy sent as below ', getDateTime());
@@ -791,25 +678,91 @@ function App() {
       _id: getId(),
     });
   }
-  // 화면 렌더링시 제일 먼저 나오는 콘솔
+  const handleCreateRoomClick = () => {
+    if (newRoomName === '') {
+      alert('생성할 방이름을 입력해야 합니다.');
+    } else
+      _create({
+        room: generateRandomNumber(),
+        description: newRoomName,
+        max_publishers: 100,
+        audiocodec: 'opus',
+        videocodec: 'vp8',
+        talking_events: false,
+        talking_level_threshold: 25,
+        talking_packets_threshold: 100,
+        permanent: false,
+        bitrate: 128000,
+        secret: 'adminpwd',
+      });
+  };
+
+  const _create = ({
+    room,
+    description,
+    max_publishers = 6,
+    audiocodec = 'opus',
+    videocodec = 'vp8',
+    talking_events = false,
+    talking_level_threshold = 25,
+    talking_packets_threshold = 100,
+    permanent = false,
+    bitrate = 128000,
+  }) => {
+    console.log('================ _create =============');
+    console.log('create sent as below ', getDateTime());
+    console.log({
+      data: {
+        room,
+        description,
+        max_publishers,
+        audiocodec,
+        videocodec,
+        talking_events,
+        talking_level_threshold,
+        talking_packets_threshold,
+        permanent,
+        bitrate,
+        secret: 'adminpwd',
+      },
+      _id: getId(),
+    });
+    socket.emit('create', {
+      data: {
+        room,
+        description,
+        max_publishers,
+        audiocodec,
+        videocodec,
+        talking_events,
+        talking_level_threshold,
+        talking_packets_threshold,
+        permanent,
+        bitrate,
+        secret: 'adminpwd',
+      },
+      _id: getId(),
+    });
+  };
+
   socket.on('connect', () => {
+    setStateOfConnect('connected');
     console.log('socket connected');
-    $('#connect_status').val('connected');
     _listRooms();
     $('#connect').prop('disabled', true);
     $('#disconnect, #list_rooms').prop('disabled', false);
     // createRoomButtonRef.current.disabled = false;
     socket.sendBuffer = [];
     // var display_name = $('#myInput').val();
-    // join({room: 1264989511454137, display:display_name, token:null});
 
-    //scheduleConnection(0.1);
     join({ room: 1234, display: $('#myInput').val(), token: null });
   });
+
   socket.on('disconnect', () => {
+    setStateOfConnect('disconnected');
     console.log('socket disconnected');
-    $('#connect_status').val('disconnected');
-    $('#room_list').html('');
+    setRoomList('');
+    // $('#room_list').html('');
     $('#connect').prop('disabled', false);
     $('#disconnect,  #list_rooms, #leave_all').prop('disabled', true);
     createRoomButtonRef.current.disabled = true;
@@ -1022,13 +975,21 @@ function App() {
     console.log(data);
   });
 
+  socket.on('rooms-list', ({ data }) => {
+    let parsedData = JSON.parse(data);
+    console.log('rooms list123 >>> ', parsedData);
+    setRoomList(parsedData); // 이게 문제였던듯.
+  });
+
   socket.on('created', ({ data }) => {
+    console.log('이게 나와야지');
     if (data.room === -1) {
       alert('room 이 중복되었습니다.');
       return;
     } else {
       console.log('room created', data);
-      $('#new_room_name').val('');
+      // $('#new_room_name').val('');
+      setNewRoomName('');
       _listRooms();
     }
   });
@@ -1124,12 +1085,12 @@ function App() {
 
         stream.getTracks().forEach((track) => {
           // 이게 실행되기전에 localStream이 정상적으로 업데이트 돼야함!!
-          // 이게 localStream이 되어야 한다..
-          pc.addTrack(track, stream); // 이게 localStream이 되어야 한다..
+          // 이게 localStream이 되어야 한다.....
+          pc.addTrack(track, stream); // 이게 localStream이 되어야 한다.....
           console.log('adding track >>> ', track, track.kind);
         });
 
-        setLocalVideoElement(stream, feed, display); // 이게 localStream이 되어야 한다..
+        setLocalVideoElement(stream, feed, display); // 이게 localStream이 되어야 한다.....
       } catch (e) {
         console.log('error while doing offer', e);
         removeVideoElementByFeed(feed);
@@ -1256,8 +1217,9 @@ function App() {
         const localVideoOnOffElem = document.createElement('img');
         localVideoOnOffElem.id = 'videoBtn';
         localVideoOnOffElem.classList.add('videoOn');
+        console.log('localStream >>> ', localStream);
         localVideoOnOffElem.addEventListener('click', () => {
-          configure_bitrate_audio_video('video');
+          configure_bitrate_audio_video('video'); // 이걸 실행할 당시에 localStream이 있어야함.
         });
 
         // const localAudioOnOffElem = <img id="audioBtn" className={isAudioOn ? 'audioOn' : 'audioOff'} alt="audio" onClick={() => configure_bitrate_audio_video('audio')} />;
@@ -1433,23 +1395,20 @@ function App() {
   }, [roomList]);
 
   useEffect(() => {
-    const handleRoomsList = ({ data }) => {
-      let parsedData = JSON.parse(data);
-      console.log('rooms list >>> ', parsedData);
-      setRoomList(parsedData);
+    const getMediaStream = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
+        setLocalStream(stream);
+      } catch (error) {
+        console.error('Error getting media stream:', error);
+        // Handle the error (e.g., show a message to the user)
+      }
     };
 
-    socket.on('rooms-list', handleRoomsList);
-  }, [socket]);
-
-  useEffect(() => {
-    const stream = navigator.mediaDevices.getUserMedia({
-      // 비동기 함수!~!!!!!!!!
-      audio: true,
-      video: true,
-    });
-
-    setLocalStream(stream);
+    getMediaStream();
   }, []);
 
   const contextValue = {
@@ -1459,6 +1418,21 @@ function App() {
     setIsModalVisible,
     socket,
     _listRooms,
+  };
+
+  const RoomItem = ({ room }) => {
+    return (
+      <div key={room.room}>
+        {room.description} ({room.num_participants}/{room.max_publishers})
+        <button className="btn btn-primary btn-xs" onClick={() => joinRoom(room.room, room.description)}>
+          join
+        </button>
+        <button className="btn btn-primary btn-xs" onClick={() => destroyRoom(room.room, room.description)}>
+          destroy
+        </button>
+        <br />
+      </div>
+    );
   };
 
   return (
@@ -1483,7 +1457,7 @@ function App() {
                               Disconnect
                             </button>
                             <div className="btn_between">
-                              <input type="text" className="form-control input-sm" disabled id="connect_status" defaultValue={stateOfConnect} />
+                              <input type="text" className="form-control input-sm" disabled id="connect_status" value={stateOfConnect} />
                             </div>
                           </div>
                           <div className="myInfoStyle">
@@ -1516,7 +1490,7 @@ function App() {
                           <div className="myInfoStyle">
                             <div className="btn_between">
                               <input
-                                id="new_room_name"
+                                // id="new_room_name"
                                 className="form-control input-sm"
                                 type="text"
                                 placeholder="new room name"
@@ -1540,18 +1514,10 @@ function App() {
                           <br />
                           <div className="roomNameNumber">room이름(현재 참가자수/최대 참가자수)</div>
 
+                          {/*  이 작고 귀여운걸 컴포넌트로 만들어서 useEffect 안에 넣는거야 어때? */}
                           <div id="room_list" className="btn_between">
-                            {roomList.map((rooms) => (
-                              <div key={rooms.room}>
-                                {rooms.description} ({rooms.num_participants}/{rooms.max_publishers})
-                                <button className="btn btn-primary btn-xs" onClick={() => joinRoom(rooms.room, rooms.description)}>
-                                  join
-                                </button>
-                                <button className="btn btn-primary btn-xs" onClick={() => destroyRoom(rooms.room, rooms.description)}>
-                                  destroy
-                                </button>
-                                <br />
-                              </div>
+                            {roomList?.map((rooms) => (
+                              <RoomItem key={rooms.room} room={rooms} />
                             ))}
                           </div>
                         </div>
