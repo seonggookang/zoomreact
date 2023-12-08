@@ -208,13 +208,6 @@ function App() {
     if (jsep) pendingOfferMap.set(configId, { feed });
   }
 
-  // $(document).on('click', '.audioOn, .audioOff', function () {
-  //   configure_bitrate_audio_video('audio');
-  // });
-  // $(document).on('click', '.videoOn, .videoOff', function () {
-  //   configure_bitrate_audio_video('video');
-  // });
-
   async function configure_bitrate_audio_video(mode, bitrate = 0) {
     console.log('================ configure_bitrate_audio_video =============');
     var feed = parseInt($('#local_feed').text());
@@ -239,8 +232,8 @@ function App() {
     }
     if (mode === 'audio') {
       // 오디오를 끄는 것이면,
-      setIsAudioOn(false);
       if ($('#audioBtn').hasClass('audioOn')) {
+        setIsAudioOn(false);
         // $('#audioBtn').removeClass('audioOn').addClass('audioOff');
 
         console.log('오디오 끄기');
@@ -318,7 +311,7 @@ function App() {
         if (videoTrack) {
           // 비디오를 끄거나 켤 수 있는 상태인지 확인합니다.
           const isVideoEnabled = videoTrack.enabled;
-          console.log('videoTrack >>> ', videoTrack);
+          console.log('videoTrack!!!!!!!!!!!!!!! >>> ', videoTrack);
 
           if (isVideoEnabled) {
             // 비디오를 끕니다.
@@ -347,6 +340,7 @@ function App() {
         console.log('비디오 켜기');
         // 미디어 스트림에서 비디오 트랙을 가져옵니다.
         const videoTrack = localStream.getVideoTracks()[0];
+        console.log('videoTrack!!!!!!!!!!!!!!! >>> ', videoTrack);
 
         // 비디오 트랙이 있는지 확인합니다.
         if (videoTrack) {
@@ -813,7 +807,7 @@ function App() {
     $('#leave_all').prop('disabled', false);
     _listRooms();
 
-    setLocalVideoElement(null, null, null, data.room);
+    setLocalVideoElement(null, null, data.display, data.room);
 
     try {
       const offer = await doOffer(data.feed, data.display, false); // createOffer
@@ -1083,14 +1077,14 @@ function App() {
 
         console.log('localStream >>> ', localStream);
 
-        stream.getTracks().forEach((track) => {
+        localStream.getTracks().forEach((track) => {
           // 이게 실행되기전에 localStream이 정상적으로 업데이트 돼야함!!
           // 이게 localStream이 되어야 한다.....
-          pc.addTrack(track, stream); // 이게 localStream이 되어야 한다.....
+          pc.addTrack(track, localStream); // 이게 localStream이 되어야 한다.....
           console.log('adding track >>> ', track, track.kind);
         });
 
-        setLocalVideoElement(stream, feed, display); // 이게 localStream이 되어야 한다.....
+        setLocalVideoElement(localStream, feed, display); // 이게 localStream이 되어야 한다.....
       } catch (e) {
         console.log('error while doing offer', e);
         removeVideoElementByFeed(feed);
@@ -1182,62 +1176,62 @@ function App() {
     if (!feed) return;
 
     // 최초 렌더링시, video_feed가 없는 상황이라 실행됨
-    if (!document.getElementById('video_' + feed)) {
+    if (!document.getElementById('video_' + feed) && localStream) {
       const nameElem = document.createElement('div');
       nameElem.innerHTML = display;
       nameElem.style.display = 'table'; // <<< 왜 있지?
       nameElem.style.cssText = 'color: #fff; font-size: 0.8rem;';
 
-      if (localStream) {
-        const localVideoStreamElem = document.createElement('video');
-        //localVideo.id = 'video_'+feed;
-        localVideoStreamElem.width = 160;
-        localVideoStreamElem.height = 120;
-        localVideoStreamElem.autoplay = true;
-        localVideoStreamElem.muted = 'muted';
-        localVideoStreamElem.classList.add('localVideoTag');
-        // localVideoStreamElem.style.cssText = '-moz-transform: scale(-1, 1); -webkit-transform: scale(-1, 1); -o-transform: scale(-1, 1); transform: scale(-1, 1); filter: FlipH;';
-        localVideoStreamElem.srcObject = localStream;
+      const localVideoStreamElem = document.createElement('video');
+      //localVideo.id = 'video_'+feed;
+      localVideoStreamElem.width = 160;
+      localVideoStreamElem.height = 120;
+      localVideoStreamElem.autoplay = true;
+      localVideoStreamElem.muted = 'muted';
+      localVideoStreamElem.classList.add('localVideoTag');
+      // localVideoStreamElem.style.cssText = '-moz-transform: scale(-1, 1); -webkit-transform: scale(-1, 1); -o-transform: scale(-1, 1); transform: scale(-1, 1); filter: FlipH;';
+      localVideoStreamElem.srcObject = localStream;
 
-        const localVideoContainer = document.createElement('div');
-        localVideoContainer.id = 'video_' + feed; ///
-        localVideoContainer.appendChild(nameElem);
-        localVideoContainer.appendChild(localVideoStreamElem);
+      const localVideoContainer = document.createElement('div');
+      localVideoContainer.id = 'video_' + feed; ///
+      localVideoContainer.appendChild(nameElem);
+      localVideoContainer.appendChild(localVideoStreamElem);
 
-        localVideoContainer.classList.add('video-view');
-        localVideoContainer.style.cssText = 'position: relative;';
+      localVideoContainer.classList.add('video-view');
+      localVideoContainer.style.cssText = 'position: relative;';
 
-        const localAudioOnOffElem = document.createElement('img');
-        localAudioOnOffElem.id = 'audioBtn';
-        localAudioOnOffElem.classList.add('audioOn');
-        localAudioOnOffElem.addEventListener('click', () => {
-          configure_bitrate_audio_video('audio');
-        });
+      const localAudioOnOffElem = document.createElement('img');
+      localAudioOnOffElem.id = 'audioBtn';
+      localAudioOnOffElem.classList.add('audioOn');
+      localAudioOnOffElem.addEventListener('click', () => {
+        configure_bitrate_audio_video('audio');
+      });
 
-        const localVideoOnOffElem = document.createElement('img');
-        localVideoOnOffElem.id = 'videoBtn';
-        localVideoOnOffElem.classList.add('videoOn');
-        console.log('localStream >>> ', localStream);
-        localVideoOnOffElem.addEventListener('click', () => {
-          configure_bitrate_audio_video('video'); // 이걸 실행할 당시에 localStream이 있어야함.
-        });
+      const localVideoOnOffElem = document.createElement('img');
+      localVideoOnOffElem.id = 'videoBtn';
+      localVideoOnOffElem.classList.add('videoOn');
+      console.log('localStream >>> ', localStream);
+      localVideoOnOffElem.addEventListener('click', () => {
+        configure_bitrate_audio_video('video'); // 이걸 실행할 당시에 localStream이 있어야함.
+      });
 
-        // const localAudioOnOffElem = <img id="audioBtn" className={isAudioOn ? 'audioOn' : 'audioOff'} alt="audio" onClick={() => configure_bitrate_audio_video('audio')} />;
-        // const localVideoOnOffElem = <img id="videoBtn" className={isVideoOn ? 'videoOn' : 'videoOff'} alt="video" onClick={() => configure_bitrate_audio_video('video')} />;
+      // const localAudioOnOffElem = <img id="audioBtn" className={isAudioOn ? 'audioOn' : 'audioOff'} alt="audio" onClick={() => configure_bitrate_audio_video('audio')} />;
+      // const localVideoOnOffElem = <img id="videoBtn" className={isVideoOn ? 'videoOn' : 'videoOff'} alt="video" onClick={() => configure_bitrate_audio_video('video')} />;
 
-        localVideoContainer.appendChild(localAudioOnOffElem);
-        localVideoContainer.appendChild(localVideoOnOffElem);
+      localVideoContainer.appendChild(localAudioOnOffElem);
+      localVideoContainer.appendChild(localVideoOnOffElem);
 
-        document.getElementById('locals').appendChild(localVideoContainer);
-      }
+      document.getElementById('locals').appendChild(localVideoContainer);
     } else {
       const localVideoContainer = document.getElementById('video_' + feed);
-      console.log('localVideoContainer >>> ');
       if (display) {
         const nameElem = localVideoContainer.getElementsByTagName('div')[0];
+        console.log('nameElem >>> ', nameElem);
         nameElem.innerHTML = display;
       }
       const localVideoStreamElem = localVideoContainer.getElementsByTagName('video')[0];
+
+      console.log('localVideoStreamElem >>> ', localVideoStreamElem);
       if (localStream) console.log('setLocalVideoElement() >>> change local stream...');
       localVideoStreamElem.srcObject = localStream;
     }
@@ -1399,12 +1393,11 @@ function App() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
-          video: true,
+          video: { frameRate: { ideal: frameRate, max: frameRate } },
         });
         setLocalStream(stream);
       } catch (error) {
         console.error('Error getting media stream:', error);
-        // Handle the error (e.g., show a message to the user)
       }
     };
 
