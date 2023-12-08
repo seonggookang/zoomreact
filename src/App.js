@@ -43,7 +43,7 @@ function App() {
   const handleCreateRoomClick = () => {
     if (newRoomName === '') {
       alert('생성할 방이름을 입력해야 합니다.');
-    } else {
+    } else
       _create({
         room: generateRandomNumber(),
         description: $('#new_room_name').val(),
@@ -57,7 +57,54 @@ function App() {
         bitrate: 128000,
         secret: 'adminpwd',
       });
-    }
+  };
+
+  const _create = ({
+    room,
+    description,
+    max_publishers = 6,
+    audiocodec = 'opus',
+    videocodec = 'vp8',
+    talking_events = false,
+    talking_level_threshold = 25,
+    talking_packets_threshold = 100,
+    permanent = false,
+    bitrate = 128000,
+  }) => {
+    console.log('================ _create =============');
+    console.log('create sent as below ', getDateTime());
+    console.log({
+      data: {
+        room,
+        description,
+        max_publishers,
+        audiocodec,
+        videocodec,
+        talking_events,
+        talking_level_threshold,
+        talking_packets_threshold,
+        permanent,
+        bitrate,
+        secret: 'adminpwd',
+      },
+      _id: getId(),
+    });
+    socket.emit('create', {
+      data: {
+        room,
+        description,
+        max_publishers,
+        audiocodec,
+        videocodec,
+        talking_events,
+        talking_level_threshold,
+        talking_packets_threshold,
+        permanent,
+        bitrate,
+        secret: 'adminpwd',
+      },
+      _id: getId(),
+    });
   };
 
   const handleConnectValue = () => {
@@ -589,53 +636,53 @@ function App() {
     });
   }
 
-  function _create({
-    room,
-    description,
-    max_publishers = 6,
-    audiocodec = 'opus',
-    videocodec = 'vp8',
-    talking_events = false,
-    talking_level_threshold = 25,
-    talking_packets_threshold = 100,
-    permanent = false,
-    bitrate = 128000,
-  }) {
-    console.log('================ _create =============');
-    console.log('create sent as below ', getDateTime());
-    console.log({
-      data: {
-        room,
-        description,
-        max_publishers,
-        audiocodec,
-        videocodec,
-        talking_events,
-        talking_level_threshold,
-        talking_packets_threshold,
-        permanent,
-        bitrate,
-        secret: 'adminpwd',
-      },
-      _id: getId(),
-    });
-    socket.emit('create', {
-      data: {
-        room,
-        description,
-        max_publishers,
-        audiocodec,
-        videocodec,
-        talking_events,
-        talking_level_threshold,
-        talking_packets_threshold,
-        permanent,
-        bitrate,
-        secret: 'adminpwd',
-      },
-      _id: getId(),
-    });
-  }
+  // function _create({
+  //   room,
+  //   description,
+  //   max_publishers = 6,
+  //   audiocodec = 'opus',
+  //   videocodec = 'vp8',
+  //   talking_events = false,
+  //   talking_level_threshold = 25,
+  //   talking_packets_threshold = 100,
+  //   permanent = false,
+  //   bitrate = 128000,
+  // }) {
+  //   console.log('================ _create =============');
+  //   console.log('create sent as below ', getDateTime());
+  //   console.log({
+  //     data: {
+  //       room,
+  //       description,
+  //       max_publishers,
+  //       audiocodec,
+  //       videocodec,
+  //       talking_events,
+  //       talking_level_threshold,
+  //       talking_packets_threshold,
+  //       permanent,
+  //       bitrate,
+  //       secret: 'adminpwd',
+  //     },
+  //     _id: getId(),
+  //   });
+  //   socket.emit('create', {
+  //     data: {
+  //       room,
+  //       description,
+  //       max_publishers,
+  //       audiocodec,
+  //       videocodec,
+  //       talking_events,
+  //       talking_level_threshold,
+  //       talking_packets_threshold,
+  //       permanent,
+  //       bitrate,
+  //       secret: 'adminpwd',
+  //     },
+  //     _id: getId(),
+  //   });
+  // }
 
   function _destroy({ room = myRoom, permanent = false, secret = 'adminpwd' }) {
     console.log('================ _destroy =============');
@@ -751,7 +798,7 @@ function App() {
     _listRooms();
     $('#connect').prop('disabled', true);
     $('#disconnect, #list_rooms').prop('disabled', false);
-    createRoomButtonRef.current.disabled = false;
+    // createRoomButtonRef.current.disabled = false;
     socket.sendBuffer = [];
     // var display_name = $('#myInput').val();
     // join({room: 1264989511454137, display:display_name, token:null});
@@ -976,13 +1023,10 @@ function App() {
   });
 
   socket.on('created', ({ data }) => {
-    console.log('안나오는중');
     if (data.room === -1) {
-      console.log('111');
       alert('room 이 중복되었습니다.');
       return;
     } else {
-      console.log('222222');
       console.log('room created', data);
       $('#new_room_name').val('');
       _listRooms();
@@ -1480,7 +1524,7 @@ function App() {
                                 onChange={(e) => setNewRoomName(e.target.value)}
                               />
                             </div>
-                            <button ref={createRoomButtonRef} type="button" className="btn btn-primary btn-xs btn_between" onClick={handleCreateRoomClick}>
+                            <button id="create_room" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleCreateRoomClick}>
                               create_room
                             </button>
                           </div>
