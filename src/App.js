@@ -744,7 +744,6 @@ function App() {
       _id: getId(),
     });
   }
-
   // 화면 렌더링시 제일 먼저 나오는 콘솔
   socket.on('connect', () => {
     console.log('socket connected');
@@ -760,7 +759,6 @@ function App() {
     //scheduleConnection(0.1);
     join({ room: 1234, display: $('#myInput').val(), token: null });
   });
-
   socket.on('disconnect', () => {
     console.log('socket disconnected');
     $('#connect_status').val('disconnected');
@@ -977,37 +975,19 @@ function App() {
     console.log(data);
   });
 
-  // socket.on('rooms-list', ({ data }) => {
-  //   var parsedData = JSON.parse(data);
-  //   console.log('rooms list', parsedData);
-  //   console.log(typeof parsedData);
-  //   $('#room_list').html('');
-  //   parsedData.forEach((rooms) => {
-  //     $('#room_list').html(
-  //       $('#room_list').html() +
-  //         "<br><span className='room' room='" +
-  //         rooms.room +
-  //         "'>" +
-  //         rooms.description +
-  //         '</span>(' +
-  //         rooms.num_participants +
-  //         '/' +
-  //         rooms.max_publishers +
-  //         ")&nbsp;<button className='btn btn-primary btn-xs' room='" +
-  //         rooms.room +
-  //         "' onclick='join22(" +
-  //         rooms.room +
-  //         ', "' +
-  //         rooms.description +
-  //         '");\'>join</button>&nbsp;' +
-  //         "<button className='btn btn-primary btn-xs' onclick='destroy_room(" +
-  //         rooms.room +
-  //         ', "' +
-  //         rooms.description +
-  //         '");\'>destroy</button>'
-  //     );
-  //   });
-  // });
+  socket.on('created', ({ data }) => {
+    console.log('안나오는중');
+    if (data.room === -1) {
+      console.log('111');
+      alert('room 이 중복되었습니다.');
+      return;
+    } else {
+      console.log('222222');
+      console.log('room created', data);
+      $('#new_room_name').val('');
+      _listRooms();
+    }
+  });
 
   socket.on('destroyed', ({ data }) => {
     console.log('room destroyed', data);
@@ -1427,22 +1407,6 @@ function App() {
 
     setLocalStream(stream);
   }, []);
-
-  useEffect(() => {
-    socket.on('created', ({ data }) => {
-      console.log('안나오는중');
-      if (data.room === -1) {
-        console.log('111');
-        alert('room 이 중복되었습니다.');
-        return;
-      } else {
-        console.log('222222');
-        console.log('room created', data);
-        $('#new_room_name').val('');
-        _listRooms();
-      }
-    });
-  });
 
   const contextValue = {
     displayName,
