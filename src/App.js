@@ -13,6 +13,7 @@ function App() {
   const [isPublished, setIsPublished] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(true);
   const videoRef = useRef(null);
+  const audioBtnRef = useRef(null);
   const videoBtnRef = useRef(null);
 
   const createRoomButtonRef = useRef();
@@ -117,7 +118,7 @@ function App() {
     };
     console.log('join sent as below ', getDateTime());
     console.log({
-      data: joinData, // 내가 입력한 display가 안나오고 john_doe가 나옴!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      data: joinData,
       _id: getId(),
     });
     socket.emit('join', {
@@ -1019,78 +1020,24 @@ function App() {
     console.log('================ configure_bitrate_audio_video =============');
 
     if (mode === 'audio') {
-      // 오디오를 끄는 것이면,
-      if ($('#audioBtn').hasClass('audioOn')) {
-        $('#audioBtn').removeClass('audioOn').addClass('audioOff');
-
-        console.log('오디오 끄기');
-
-        const audioTrack = localStream.getAudioTracks()[0];
-        if (audioTrack) {
-          // 오디오를 끄거나 켤 수 있는 상태인지 확인합니다.
-          const isAudioEnabled = audioTrack.enabled;
-
-          if (isAudioEnabled) {
-            audioTrack.enabled = false;
-            console.log('오디오를 끔');
-          } else {
-            audioTrack.enabled = true;
-            console.log('오디오를 켬');
-          }
-        } else {
-          console.log('오디오 트랙을 찾을 수 없습니다.');
-        }
-
-        try {
-          console.log('try something');
-        } catch (e) {
-          console.log('error while doing offer for changing', e);
-          return;
-        }
+      const audioTrack = localStream.getAudioTracks()[0];
+      // 오디오 트랙이 있는지 확인합니다.
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled; // 이렇게 해도 동작됨
       } else {
-        // 오디오를 켜는 것이면,
-        $('#audioBtn').removeClass('audioOff').addClass('audioOn');
-
-        console.log('오디오 켜기');
-        const audioTrack = localStream.getAudioTracks()[0];
-        if (audioTrack) {
-          const isAudioEnabled = audioTrack.enabled;
-
-          if (isAudioEnabled) {
-            audioTrack.enabled = false;
-            console.log('오디오를 끔');
-          } else {
-            audioTrack.enabled = true;
-            console.log('오디오를 켬');
-          }
-        } else {
-          console.log('오디오 트랙을 찾을 수 없습니다.');
-        }
-
-        try {
-          console.log('try something');
-        } catch (e) {
-          console.log('error while doing offer for changing', e);
-          return;
-        }
+        console.log('오디오 트랙을 찾을 수 없습니다.');
       }
     }
     if (mode === 'video') {
-      const videoTrack = localStream.getVideoTracks()[0]; // 이게 업데이트가 안되는중...
-      console.log('videoTrack >>> ', videoTrack);
+      const videoTrack = localStream.getVideoTracks()[0];
       // 비디오 트랙이 있는지 확인합니다.
-
       if (videoTrack) {
-        // 비디오를 끄거나 켤 수 있는 상태인지 확인합니다.
-
-        videoTrack.enabled = !videoTrack.enabled; // 이렇게 해도 동작이 되긴함.
+        videoTrack.enabled = !videoTrack.enabled; // 이렇게 해도 동작됨
       } else {
         console.log('비디오 트랙을 찾을 수 없습니다.');
       }
     }
   }
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////////
 
   function setLocalVideoElement(localStream, feed, display) {
     // if (room) document.getElementById('videos').getElementsByTagName('span')[0].innerHTML = '   --- VIDEOROOM (' + room + ') ---  ';
@@ -1111,8 +1058,9 @@ function App() {
             {display}
           </div>
           <video ref={videoRef} width="160" height="120" autoPlay className="localVideoTag" />
-          <img id="audioBtn" className={isAudioOn ? 'audioOn' : 'audioOff'} alt="audio" onClick={() => configure_bitrate_audio_video('audio')} />
-          <img ref={videoBtnRef} className={isVideoOn ? 'videoOn' : 'videoOff'} alt="video" onClick={() => handleToggle('video')} /> {/* 이게 className이 토글이 되야함 */}
+          {/* <img ref={audioBtnRef} className={isAudioOn ? 'audioOn' : 'audioOff'} alt="audio" onClick={() => configure_bitrate_audio_video('audio')} /> */}
+          <img ref={audioBtnRef} className={isAudioOn ? 'audioOn' : 'audioOff'} alt="audio" onClick={() => handleToggle('audio')} />
+          <img ref={videoBtnRef} className={isVideoOn ? 'videoOn' : 'videoOff'} alt="video" onClick={() => handleToggle('video')} />
         </div>
       );
 
@@ -1305,7 +1253,10 @@ function App() {
     if (videoBtnRef.current) {
       videoBtnRef.current.className = isVideoOn ? 'videoOn' : 'videoOff';
     }
-  }, [isVideoOn]);
+    if (audioBtnRef.current) {
+      audioBtnRef.current.className = isVideoOn ? 'videoOn' : 'videoOff';
+    }
+  }, [isVideoOn, isAudioOn]);
 
   const contextValue = {
     displayName,
