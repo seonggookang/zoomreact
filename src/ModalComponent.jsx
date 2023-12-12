@@ -1,10 +1,11 @@
 // ModalComponent.js
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import AppContext from './Appcontext';
 import $ from 'jquery';
 
 const ModalComponent = () => {
   const { displayName, setDisplayName, handleDisplayNameChange, setIsModalVisible, socket, _listRooms } = useContext(AppContext);
+  const inputRef = useRef(null);
 
   const hideModal = () => {
     setIsModalVisible(false);
@@ -26,6 +27,12 @@ const ModalComponent = () => {
     }
   };
 
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      enterAction(event);
+    }
+  };
+
   useEffect(() => {
     const randomNumber2 = Math.floor(Math.random() * 1e5)
       .toString()
@@ -34,6 +41,10 @@ const ModalComponent = () => {
     setDisplayName(randomNumber2);
   }, []);
 
+  useEffect(() => {
+    // 컴포넌트가 마운트될 때 input 요소에 포커스를 맞춤.
+    inputRef.current.focus();
+  }, []);
   return (
     <form onSubmit={enterAction}>
       <div className="modal modal-dialog modal-dialog-centered" tabIndex="-1" role="dialog">
@@ -44,7 +55,7 @@ const ModalComponent = () => {
             </div>
             <div className="modal-body">
               <div id="myMessage" className="myMessage"></div>
-              <input type="text" className="myInput" placeholder="참석할 이름" value={displayName} onChange={handleDisplayNameChange} />
+              <input ref={inputRef} type="text" className="myInput" placeholder="참석할 이름" value={displayName} onChange={handleDisplayNameChange} onKeyPress={handleKeyPress} />
             </div>
             <div className="modal-footer">
               <button type="submit" id="enterRoom" className="btn btn-primary">

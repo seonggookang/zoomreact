@@ -1009,9 +1009,9 @@ function App() {
 
     await configure_bitrate_audio_video(mode);
     // 여기에서 다시 videoRef를 사용하여 localStream을 갱신합니다.
-    if (videoRef.current) {
-      videoRef.current.srcObject = localStream;
-    }
+    // if (videoRef.current) { 여따 두던걸 video 분기 안으로 넣으니까 음성버튼 클릭할때는 깜빡임 사라짐. 하지만 화면 누를땐 여전히 깜빡거림.
+    //   videoRef.current.srcObject = localStream;
+    // }
   };
 
   //--------------
@@ -1019,6 +1019,7 @@ function App() {
     console.log('================ configure_bitrate_audio_video =============');
 
     if (mode === 'audio') {
+      console.log('audio 버튼 클릭');
       setIsAudioOn((prevState) => !prevState);
       const audioTrack = localStream.getAudioTracks()[0];
       // 오디오 트랙이 있는지 확인합니다.
@@ -1029,6 +1030,10 @@ function App() {
       }
     }
     if (mode === 'video') {
+      console.log('video 버튼 클릭');
+      if (videoRef.current) {
+        videoRef.current.srcObject = localStream;
+      }
       setIsVideoOn((prevState) => !prevState);
       const videoTrack = localStream.getVideoTracks()[0];
       // 비디오 트랙이 있는지 확인합니다.
@@ -1361,8 +1366,6 @@ function App() {
                           <br />
                           <br />
                           <div className="roomNameNumber">room이름(현재 참가자수/최대 참가자수)</div>
-
-                          {/*  이 작고 귀여운걸 컴포넌트로 만들어서 useEffect 안에 넣는거야 어때? */}
                           <div id="room_list" className="btn_between">
                             {roomList?.map((rooms) => (
                               <RoomItem key={rooms.room} room={rooms} />
