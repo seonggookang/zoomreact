@@ -1,16 +1,12 @@
 /* global io $ connect disconnect list_rooms get_room_id leave_all unpublish*/
 
 import './App.css';
-import Container from './Container';
 import ModalComponent from './ModalComponent';
 import { useState, useRef, useEffect, React } from 'react';
 import AppContext from './Appcontext';
 import io from 'socket.io-client';
 import $ from 'jquery';
 import ReactDOM from 'react-dom';
-import LocalVideoElement from './LocalVideoElement';
-import Videos from './Videos';
-import { useLocation } from 'react-router-dom';
 
 function App() {
   const [displayName, setDisplayName] = useState('');
@@ -21,7 +17,6 @@ function App() {
 
   const createRoomButtonRef = useRef();
   let myRoom = getURLParameter('room') ? parseInt(getURLParameter('room')) : getURLParameter('room_str') || 1234;
-  const location = useLocation();
   const randName = 'John_Doe_' + Math.floor(10000 * Math.random());
   const myName = getURLParameter('name') || randName;
   const [localStream, setLocalStream] = useState('');
@@ -39,7 +34,6 @@ function App() {
   let local_display;
   let frameRate;
 
-  // const [socket, _] = useState(io('https://janusc.wizbase.co.kr:4443', { autoConnect: false }));
   const socket = io('https://janusc.wizbase.co.kr:4443', { autoConnect: false });
 
   const handleConnectValue = () => {
@@ -209,189 +203,6 @@ function App() {
     });
 
     if (jsep) pendingOfferMap.set(configId, { feed });
-  }
-
-  async function configure_bitrate_audio_video1(mode, bitrate = 0) {
-    console.log('================ configure_bitrate_audio_video =============');
-    let feed = parseInt($('#local_feed').text());
-
-    if (mode === 'bitrate') {
-      var configureData = {
-        feed,
-        bitrate: bitrate,
-      };
-      console.log({
-        data: configureData,
-        _id: getId(),
-      });
-      console.log(bitrate / 1000);
-      var bitrate_label = bitrate / 1000 > 1000 ? bitrate / 1000 / 1000 + 'M' : bitrate / 1000 + 'K';
-      $('#Bandwidth_label').text(bitrate_label);
-      socket.emit('configure', {
-        // configure 전송. 서버에 있는 자신의 handle에 offer를 전달.
-        data: configureData,
-        _id: getId(),
-      });
-    }
-    if (mode === 'audio') {
-      // 오디오를 끄는 것이면,
-      if ($('#audioBtn').hasClass('audioOn')) {
-        setIsAudioOn(false);
-        $('#audioBtn').removeClass('audioOn').addClass('audioOff');
-
-        console.log('오디오 끄기');
-
-        const audioTrack = localStream.getAudioTracks()[0];
-        if (audioTrack) {
-          // 오디오를 끄거나 켤 수 있는 상태인지 확인합니다.
-          const isAudioEnabled = audioTrack.enabled;
-
-          if (isAudioEnabled) {
-            audioTrack.enabled = false;
-            console.log('오디오를 끔');
-          } else {
-            audioTrack.enabled = true;
-            console.log('오디오를 켬');
-          }
-        } else {
-          console.log('오디오 트랙을 찾을 수 없습니다.');
-        }
-
-        // local_audio_onoff = false;
-
-        try {
-          console.log('try something');
-        } catch (e) {
-          console.log('error while doing offer for changing', e);
-          return;
-        }
-      } else {
-        // 오디오를 켜는 것이면,
-        setIsAudioOn(true);
-        $('#audioBtn').removeClass('audioOff').addClass('audioOn');
-
-        console.log('오디오 켜기');
-        const audioTrack = localStream.getAudioTracks()[0];
-        if (audioTrack) {
-          const isAudioEnabled = audioTrack.enabled;
-
-          if (isAudioEnabled) {
-            audioTrack.enabled = false;
-            console.log('오디오를 끔');
-          } else {
-            audioTrack.enabled = true;
-            console.log('오디오를 켬');
-          }
-        } else {
-          console.log('오디오 트랙을 찾을 수 없습니다.');
-        }
-
-        try {
-          console.log('try something');
-        } catch (e) {
-          console.log('error while doing offer for changing', e);
-          return;
-        }
-      }
-    }
-    if (mode === 'video') {
-      setIsVideoOn((prev) => !prev);
-      // 이게 변경이 되어줘야 이미지 토글이 됨. 하지만 비동기로 동작하므로 바로 업데이트되지 않음!
-      const videoTrack = localStream.getVideoTracks()[0]; // 이게 업데이트가 안되는중...
-      // 비디오 트랙이 있는지 확인합니다.
-      if (videoTrack) {
-        // 비디오를 끄거나 켤 수 있는 상태인지 확인합니다.
-        const isVideoEnabled = videoTrack.enabled;
-
-        if (isVideoEnabled) {
-          // 비디오를 끕니다.
-          videoTrack.enabled = false; // 이게 상대한테 전달이 됨.
-          console.log('비디오를 끔');
-        } else {
-          // 비디오를 켭니다.
-          videoTrack.enabled = true; // 이게 상대한테 전달이 됨.
-          console.log('비디오를 켬');
-        }
-      } else {
-        console.log('비디오 트랙을 찾을 수 없습니다.');
-      }
-
-      try {
-        console.log('try something');
-      } catch (e) {
-        console.log('error while doing offer for changing', e);
-        return;
-      }
-
-      // setIsVideoOn((prev) => !prev);
-      // // 비디오를 끄는 것이면
-      // setIsVideoOn(false);
-      // if ($('#videoBtn').hasClass('videoOn')) {
-      //   $('#videoBtn').removeClass('videoOn').addClass('videoOff');
-
-      //   console.log('비디오 끄기');
-
-      //   // 미디어 스트림에서 비디오 트랙을 가져옵니다.
-      //   const videoTrack = localStream.getVideoTracks()[0]; // 이게 업데이트가 안되는중...
-      //   // 비디오 트랙이 있는지 확인합니다.
-      //   if (videoTrack) {
-      //     // 비디오를 끄거나 켤 수 있는 상태인지 확인합니다.
-      //     const isVideoEnabled = videoTrack.enabled;
-
-      //     if (isVideoEnabled) {
-      //       // 비디오를 끕니다.
-      //       videoTrack.enabled = false;
-      //       console.log('비디오를 끔');
-      //     } else {
-      //       // 비디오를 켭니다.
-      //       videoTrack.enabled = true;
-      //       console.log('비디오를 켬');
-      //     }
-      //   } else {
-      //     console.log('비디오 트랙을 찾을 수 없습니다.');
-      //   }
-
-      //   try {
-      //     console.log('try something');
-      //   } catch (e) {
-      //     console.log('error while doing offer for changing', e);
-      //     return;
-      //   }
-      // } else {
-      //   // 비디오를 켜는 것이면,
-      //   setIsVideoOn(true);
-      //   $('#videoBtn').removeClass('videoOff').addClass('videoOn');
-
-      //   console.log('비디오 켜기');
-      //   // 미디어 스트림에서 비디오 트랙을 가져옵니다.
-      //   const videoTrack = localStream.getVideoTracks()[0];
-
-      //   // 비디오 트랙이 있는지 확인합니다.
-      //   if (videoTrack) {
-      //     // 비디오를 끄거나 켤 수 있는 상태인지 확인합니다.
-      //     const isVideoEnabled = videoTrack.enabled;
-
-      //     if (isVideoEnabled) {
-      //       // 비디오를 끕니다.
-      //       videoTrack.enabled = false;
-      //       console.log('비디오를 끔');
-      //     } else {
-      //       // 비디오를 켭니다.
-      //       videoTrack.enabled = true;
-      //       console.log('비디오를 켬');
-      //     }
-      //   } else {
-      //     console.log('비디오 트랙을 찾을 수 없습니다.');
-      //   }
-
-      //   try {
-      //     console.log('try something');
-      //   } catch (e) {
-      //     console.log('error while doing offer for changing', e);
-      //     return;
-      //   }
-      // }
-    }
   }
 
   const handleDisplayNameChange = (event) => {
@@ -1055,7 +866,7 @@ function App() {
   }
 
   async function doOffer(feed, display) {
-    console.log('doOffer 정의 바로 밑 display >> ', display); // 랜덤값..
+    console.log('doOffer 정의 바로 밑 display >> ', display);
     console.log('doOffer().. feed >>> ', feed, 'display >>> ', display);
     // 내가 존재하면 더이상 실행하지 않는 함수
     if (!pcMap.has(feed)) {
@@ -1090,16 +901,11 @@ function App() {
         frameRate = parseInt($('#frame_rate').val());
         console.log('========frame_rate=', $('#frame_rate').val());
         const stream = await navigator.mediaDevices.getUserMedia({
-          // 비동기 함수!~!!!!!!!!
           audio: true,
           video: true,
         });
 
-        setLocalStream(stream); // 이거를 해서 전체적으로 업데이트가 돼야하는데..
-
-        // localStream.getTracks().forEach((track) => { 이렇게 해서 동작이 되게 하고 싶다
-        // 근데 setLocalStream 이 비동기 처리 함수라 바로 값이 불러와 지지 않는다.
-        // 이부분 어쩔수 없이 useRef로 직접 조작을 해야만 하는가?
+        setLocalStream(stream);
 
         console.log('localStream >>> ', localStream);
 
@@ -1200,27 +1006,21 @@ function App() {
   const handleToggle = async (mode) => {
     console.log('================ handleToggle =============');
 
-    // if (mode === 'video') {
-    //   setIsVideoOn((prev) => !prev);
-    //   // 다른 비디오 관련 로직 추가
-    // }
-
     setIsVideoOn((prevState) => !prevState);
     await configure_bitrate_audio_video(mode);
     // 여기에서 다시 videoRef를 사용하여 localStream을 갱신합니다.
     if (videoRef.current) {
       videoRef.current.srcObject = localStream;
-      // videoRef.current.className = isVideoOn ? 'videoOff' : 'videoOn';
     }
   };
 
   //--------------
   async function configure_bitrate_audio_video(mode) {
     console.log('================ configure_bitrate_audio_video =============');
+
     if (mode === 'audio') {
       // 오디오를 끄는 것이면,
       if ($('#audioBtn').hasClass('audioOn')) {
-        // setIsAudioOn(false);
         $('#audioBtn').removeClass('audioOn').addClass('audioOff');
 
         console.log('오디오 끄기');
@@ -1241,8 +1041,6 @@ function App() {
           console.log('오디오 트랙을 찾을 수 없습니다.');
         }
 
-        // local_audio_onoff = false;
-
         try {
           console.log('try something');
         } catch (e) {
@@ -1251,7 +1049,6 @@ function App() {
         }
       } else {
         // 오디오를 켜는 것이면,
-        // setIsAudioOn(true);
         $('#audioBtn').removeClass('audioOff').addClass('audioOn');
 
         console.log('오디오 켜기');
@@ -1279,27 +1076,14 @@ function App() {
       }
     }
     if (mode === 'video') {
-      // setIsVideoOn((prev) => !prev);
-      // 이게 변경이 되어줘야 이미지 토글이 됨. 하지만 비동기로 동작하므로 바로 업데이트되지 않음!
       const videoTrack = localStream.getVideoTracks()[0]; // 이게 업데이트가 안되는중...
       console.log('videoTrack >>> ', videoTrack);
       // 비디오 트랙이 있는지 확인합니다.
-      // $('#videoBtn').hasClass('videoOn') ? $('#videoBtn').removeClass('videoOn').addClass('videoOff') : $('#videoBtn').removeClass('videoOff').addClass('videoOn');
 
       if (videoTrack) {
         // 비디오를 끄거나 켤 수 있는 상태인지 확인합니다.
-        // let isVideoEnabled = videoTrack.enabled;
-        // isVideoEnabled = !isVideoEnabled;
+
         videoTrack.enabled = !videoTrack.enabled; // 이렇게 해도 동작이 되긴함.
-        // if (isVideoEnabled) {
-        //   // 비디오를 끕니다.
-        //   videoTrack.enabled = false; // 이게 상대한테 전달이 됨.
-        //   console.log('비디오를 끔');
-        // } else {
-        //   // 비디오를 켭니다.
-        //   videoTrack.enabled = true; // 이게 상대한테 전달이 됨.
-        //   console.log('비디오를 켬');
-        // }
       } else {
         console.log('비디오 트랙을 찾을 수 없습니다.');
       }
@@ -1314,52 +1098,6 @@ function App() {
 
     // 최초 렌더링시, video_feed가 없는 상황이라 실행됨
     if (!document.getElementById('video_' + feed)) {
-      // const nameElem = document.createElement('div');
-      // nameElem.innerHTML = display;
-      // nameElem.style.display = 'table'; // <<< 왜 있지?
-      // nameElem.style.cssText = 'color: #fff; font-size: 0.8rem;';
-
-      // const localVideoStreamElem = document.createElement('video');
-
-      // //localVideo.id = 'video_'+feed;
-      // localVideoStreamElem.width = 160;
-      // localVideoStreamElem.height = 120;
-      // localVideoStreamElem.autoplay = true;
-      // localVideoStreamElem.muted = 'muted';
-      // localVideoStreamElem.classList.add('localVideoTag');
-      // // localVideoStreamElem.style.cssText = '-moz-transform: scale(-1, 1); -webkit-transform: scale(-1, 1); -o-transform: scale(-1, 1); transform: scale(-1, 1); filter: FlipH;';
-      // localVideoStreamElem.srcObject = localStream; // 이게 관건이구만
-
-      // const localVideoContainer = document.createElement('div');
-      // localVideoContainer.id = 'video_' + feed; ///
-      // localVideoContainer.appendChild(nameElem);
-      // localVideoContainer.appendChild(localVideoStreamElem);
-
-      // localVideoContainer.classList.add('video-view');
-      // localVideoContainer.style.cssText = 'position: relative;';
-
-      // const localAudioOnOffElem = document.createElement('img');
-      // localAudioOnOffElem.id = 'audioBtn';
-      // localAudioOnOffElem.classList.add('audioOn');
-      // localAudioOnOffElem.addEventListener('click', () => {
-      //   configure_bitrate_audio_video('audio');
-      // });
-
-      // const localVideoOnOffElem = document.createElement('img');
-      // localVideoOnOffElem.id = 'videoBtn';
-      // localVideoOnOffElem.classList.add('videoOn');
-      // localVideoOnOffElem.addEventListener('click', () => {
-      //   configure_bitrate_audio_video('video');
-      // });
-
-      // const localAudioOnOffElem = <img id="audioBtn" className={isAudioOn ? 'audioOn' : 'audioOff'} alt="audio" onClick={() => configure_bitrate_audio_video('audio')} />;
-      // const localVideoOnOffElem = <img id="videoBtn" className={isVideoOn ? 'videoOn' : 'videoOff'} alt="video" onClick={() => configure_bitrate_audio_video('video')} />;
-
-      // localVideoContainer.appendChild(localAudioOnOffElem);
-      // localVideoContainer.appendChild(localVideoOnOffElem);
-
-      // document.getElementById('locals').appendChild(localVideoContainer);
-
       const localsContainer = document.getElementById('locals');
 
       const myVideo = (
@@ -1562,11 +1300,6 @@ function App() {
     if (!videoRef.current) return;
     videoRef.current.srcObject = localStream; // 이거로 인해 화면이 나오긴했다.
   }, [localStream]);
-
-  useEffect(() => {
-    // 상태 업데이트 이후에 실행되는 효과
-    console.log('isVideoOn updated:', isVideoOn);
-  }, [isVideoOn]); // isVideoOn이 업데이트될 때만 실행
 
   useEffect(() => {
     if (videoBtnRef.current) {
