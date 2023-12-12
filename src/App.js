@@ -1,83 +1,33 @@
-/* global io $ connect disconnect list_rooms get_room_id leave_all unpublish*/
-
 import './App.css';
 import ModalComponent from './ModalComponent';
 import { useState, useRef, useEffect, React } from 'react';
 import AppContext from './Appcontext';
 import io from 'socket.io-client';
-import $ from 'jquery';
 import ReactDOM from 'react-dom';
 
 function App() {
   const [displayName, setDisplayName] = useState('');
-  const [isPublished, setIsPublished] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(true);
+  const [localStream, setLocalStream] = useState('');
+  const [isAudioOn, setIsAudioOn] = useState(true);
+  const [isVideoOn, setIsVideoOn] = useState(true);
   const videoRef = useRef(null);
   const audioBtnRef = useRef(null);
   const videoBtnRef = useRef(null);
-
-  const createRoomButtonRef = useRef();
-  let myRoom = getURLParameter('room') ? parseInt(getURLParameter('room')) : getURLParameter('room_str') || 1234;
   const randName = 'John_Doe_' + Math.floor(10000 * Math.random());
   const myName = getURLParameter('name') || randName;
-  const [localStream, setLocalStream] = useState('');
+  let myRoom = getURLParameter('room') ? parseInt(getURLParameter('room')) : getURLParameter('room_str') || 1234;
 
-  const [isAudioOn, setIsAudioOn] = useState(true);
-  const [isVideoOn, setIsVideoOn] = useState(true);
-  const [newRoomName, setNewRoomName] = useState('');
-  const [roomList, setRoomList] = useState([]);
-  const [buttonsDisabled, setButtonsDisabled] = useState(true);
-
-  const [stateOfConnect, setStateOfConnect] = useState('connected');
   const pcMap = new Map();
   let pendingOfferMap = new Map(); // 존재 이유는?
   let local_feed;
-  let local_display;
-  let frameRate;
 
   const socket = io('https://janusc.wizbase.co.kr:4443', { autoConnect: false });
-
-  const handleConnectValue = () => {
-    if (socket.connected) {
-      alert('already connected!');
-    } else {
-      socket.connect();
-    }
-    setStateOfConnect('connected');
-  };
-
-  const handleDisconnectValue = () => {
-    if (!socket.connected) {
-      alert('already disconnected!');
-    } else {
-      socket.disconnect();
-    }
-    setStateOfConnect('disconnected');
-  };
-
-  // leave_all.onclick = () => {
-  //   let evtdata = {
-  //     data: { feed: $('#local_feed').text() },
-  //   };
-  //   console.log(evtdata);
-  //   if ($('#local_feed').text() == '') return;
-  //   // else _leave({feed: parseInt($('#local_feed').text()), display: $('#myInput').val()});
-  //   else _leaveAll({ feed: $('#local_feed').text(), display: $('#myInput').val() });
-  // };
-
-  // unpublish.onclick = () => {
-  //   if ($('#unpublish').text() == 'Unpublish') {
-  //     if (local_feed) {
-  //       _unpublish({ feed: local_feed }); // 이 local_feed가 어디서 오는지?
-  //     }
-  //   } else {
-  //     publishOwnFeed();
-  //   }
-  // };
 
   function getId() {
     return Math.floor(Number.MAX_SAFE_INTEGER * Math.random());
   }
+
   function generateRandomNumber() {
     const randomNumber = Math.floor(Math.random() * 1e16)
       .toString()
@@ -89,24 +39,6 @@ function App() {
     const regex = new RegExp(`[?|&]${name}=([^&;]+?)(&|#|;|$)`); // 물음표(?)나 엠퍼센트(&)로 시작하는 것을 찾음.
     const results = regex.exec(window.location.search) || [];
     return decodeURIComponent((results[1] || '').replace(/\+/g, '%20')) || null;
-  }
-
-  function destroy_room(room, desc) {
-    if (window.confirm(desc + ' room을 삭제하겠습니까?')) {
-      _destroy({ room: room, permanent: false, secret: 'adminpwd' });
-    }
-  }
-
-  function join22(room, desc) {
-    var display_name = $('#myInput').val();
-    if (display_name === '') {
-      alert('참석할 이름을 입력해야 합니다.');
-      return;
-    }
-    join({ room: room, display: display_name, token: null });
-    // if (confirm('Room ['+ desc+'] 에 [' + display_name+ '] 이름으로 조인하겠습니까?')) {
-    //   join({room: room, display:display_name, token:null});
-    // }
   }
 
   function join({ room = myRoom, display = myName, token = null }) {
@@ -129,9 +61,7 @@ function App() {
   }
 
   function subscribeTo(peers, room = myRoom) {
-    // publishers, room
     peers.forEach(({ feed }) => {
-      // console.log({ feed, room });
       subscribe({ feed, room });
     });
   }
@@ -210,106 +140,6 @@ function App() {
     setDisplayName(event.target.value);
   };
 
-  async function publishOwnFeed() {
-    try {
-      const offer = await doOffer(local_feed, local_display, false);
-      configure({ feed: local_feed, jsep: offer, just_configure: false });
-
-      $('#unpublish').text('Unpublish');
-    } catch (e) {
-      console.log('error while doing offer in publishOwnFeed()', e);
-    }
-  }
-
-  function _unpublish({ feed }) {
-    console.log('================ _unpublish =============');
-    const unpublishData = {
-      feed,
-    };
-
-    console.log('unpublish sent as below ', getDateTime());
-    console.log({
-      data: unpublishData,
-      _id: getId(),
-    });
-    socket.emit('unpublish', {
-      data: unpublishData,
-      _id: getId(),
-    });
-  }
-
-  function _leave({ feed, display }) {
-    console.log('================ _leave =============');
-    const leaveData = {
-      feed,
-      display,
-    };
-
-    console.log('leave sent as below ', getDateTime());
-    console.log({
-      data: leaveData,
-      _id: getId(),
-    });
-
-    socket.emit('leave', {
-      data: leaveData,
-      _id: getId(),
-    });
-  }
-  function _leaveAll({ feed, display }) {
-    console.log('================ _leaveAll =============');
-    const leaveData = {
-      feed,
-      display,
-    };
-
-    console.log('leaveAll sent as below ', getDateTime());
-    console.log({
-      data: leaveData,
-      _id: getId(),
-    });
-    socket.emit('leaveAll', {
-      data: leaveData,
-      _id: getId(),
-    });
-  }
-
-  function _listParticipants({ room = myRoom } = {}) {
-    console.log('================ _listParticipants =============');
-    const listData = {
-      room,
-    };
-
-    console.log('list-participants sent as below ', getDateTime());
-    console.log({
-      data: listData,
-      _id: getId(),
-    });
-    socket.emit('list-participants', {
-      data: listData,
-      _id: getId(),
-    });
-  }
-
-  function _kick({ feed, room = myRoom, secret = 'adminpwd' }) {
-    console.log('================ _kick =============');
-    const kickData = {
-      room,
-      feed,
-      secret,
-    };
-
-    console.log('kick sent as below ', getDateTime());
-    console.log({
-      data: kickData,
-      _id: getId(),
-    });
-    socket.emit('kick', {
-      data: kickData,
-      _id: getId(),
-    });
-  }
-
   function start({ feed, jsep = null }) {
     console.log('================ start =============');
     const startData = {
@@ -328,69 +158,6 @@ function App() {
     });
   }
 
-  function _pause({ feed }) {
-    console.log('================ _pause =============');
-    const pauseData = {
-      feed,
-    };
-
-    console.log('pause sent as below ', getDateTime());
-    console.log({
-      data: pauseData,
-      _id: getId(),
-    });
-    socket.emit('pause', {
-      data: pauseData,
-      _id: getId(),
-    });
-  }
-  const handleUnpublishClick = () => {
-    if (local_feed) {
-      _unpublish({ feed: local_feed });
-      setIsPublished(false);
-    } else {
-      publishOwnFeed();
-      setIsPublished(true);
-    }
-  };
-  function _switch({ from_feed, to_feed, audio = true, video = true, data = false }) {
-    console.log('================ _switch =============');
-    const switchData = {
-      from_feed,
-      to_feed,
-      audio,
-      video,
-      data,
-    };
-
-    console.log('switch sent as below ', getDateTime());
-    console.log({
-      data: switchData,
-      _id: getId(),
-    });
-    socket.emit('switch', {
-      data: switchData,
-      _id: getId(),
-    });
-  }
-
-  function _exists({ room = myRoom } = {}) {
-    console.log('================ _exists =============');
-    const existsData = {
-      room,
-    };
-
-    console.log('exists sent as below ', getDateTime());
-    console.log({
-      data: existsData,
-      _id: getId(),
-    });
-    socket.emit('exists', {
-      data: existsData,
-      _id: getId(),
-    });
-  }
-
   function _listRooms() {
     console.log('================ _listRooms =============');
     console.log('list-rooms sent as below ', getDateTime());
@@ -402,201 +169,15 @@ function App() {
     });
   }
 
-  function _destroy({ room = myRoom, permanent = false, secret = 'adminpwd' }) {
-    console.log('================ _destroy =============');
-    console.log('destroy sent as below ', getDateTime());
-    console.log({
-      data: {
-        room,
-        permanent,
-        secret,
-      },
-      _id: getId(),
-    });
-    socket.emit('destroy', {
-      data: {
-        room,
-        permanent,
-        secret,
-      },
-      _id: getId(),
-    });
-  }
-
-  // add remove enable disable token mgmt
-  function _allow({ room = myRoom, action, token, secret = 'adminpwd' }) {
-    console.log('================ _allow =============');
-    const allowData = {
-      room,
-      action,
-      secret,
-    };
-    if (action !== 'disable' && token) allowData.list = [token];
-
-    console.log('allow sent as below ', getDateTime());
-    console.log({
-      data: allowData,
-      _id: getId(),
-    });
-    socket.emit('allow', {
-      data: allowData,
-      _id: getId(),
-    });
-  }
-
-  function _startForward({ feed, room = myRoom, host = 'localhost', audio_port, video_port, data_port = null, secret = 'adminpwd' }) {
-    console.log('================ _startForward =============');
-    console.log('rtp-fwd-start sent as below ', getDateTime());
-    console.log({
-      data: {
-        room,
-        feed,
-        host,
-        audio_port,
-        video_port,
-        data_port,
-        secret,
-      },
-      _id: getId(),
-    });
-    socket.emit('rtp-fwd-start', {
-      data: {
-        room,
-        feed,
-        host,
-        audio_port,
-        video_port,
-        data_port,
-        secret,
-      },
-      _id: getId(),
-    });
-  }
-
-  function _stopForward({ stream, feed, room = myRoom, secret = 'adminpwd' }) {
-    console.log('================ _stopForward =============');
-    console.log('rtp-fwd-stop sent as below ', getDateTime());
-    console.log({
-      data: {
-        room,
-        stream,
-        feed,
-        secret,
-      },
-      _id: getId(),
-    });
-    socket.emit('rtp-fwd-stop', {
-      data: {
-        room,
-        stream,
-        feed,
-        secret,
-      },
-      _id: getId(),
-    });
-  }
-
-  function _listForward({ room = myRoom, secret = 'adminpwd' }) {
-    console.log('================ _listForward =============');
-    console.log('rtp-fwd-list sent as below ', getDateTime());
-    console.log({
-      data: { room, secret },
-      _id: getId(),
-    });
-    socket.emit('rtp-fwd-list', {
-      // realtime transport protocol, 실시간 비디오,오디오를 UDP와 IP를 통해 전송하는 프로토콜
-      data: { room, secret },
-      _id: getId(),
-    });
-  }
-  const handleCreateRoomClick = () => {
-    if (newRoomName === '') {
-      alert('생성할 방이름을 입력해야 합니다.');
-    } else
-      _create({
-        room: generateRandomNumber(),
-        description: newRoomName,
-        max_publishers: 100,
-        audiocodec: 'opus',
-        videocodec: 'vp8',
-        talking_events: false,
-        talking_level_threshold: 25,
-        talking_packets_threshold: 100,
-        permanent: false,
-        bitrate: 128000,
-        secret: 'adminpwd',
-      });
-  };
-
-  const _create = ({
-    room,
-    description,
-    max_publishers = 6,
-    audiocodec = 'opus',
-    videocodec = 'vp8',
-    talking_events = false,
-    talking_level_threshold = 25,
-    talking_packets_threshold = 100,
-    permanent = false,
-    bitrate = 128000,
-  }) => {
-    console.log('================ _create =============');
-    console.log('create sent as below ', getDateTime());
-    console.log({
-      data: {
-        room,
-        description,
-        max_publishers,
-        audiocodec,
-        videocodec,
-        talking_events,
-        talking_level_threshold,
-        talking_packets_threshold,
-        permanent,
-        bitrate,
-        secret: 'adminpwd',
-      },
-      _id: getId(),
-    });
-    socket.emit('create', {
-      data: {
-        room,
-        description,
-        max_publishers,
-        audiocodec,
-        videocodec,
-        talking_events,
-        talking_level_threshold,
-        talking_packets_threshold,
-        permanent,
-        bitrate,
-        secret: 'adminpwd',
-      },
-      _id: getId(),
-    });
-  };
-
   socket.on('connect', () => {
-    setStateOfConnect('connected');
     console.log('socket connected');
     _listRooms();
-    $('#connect').prop('disabled', true);
-    $('#disconnect, #list_rooms').prop('disabled', false);
-    // createRoomButtonRef.current.disabled = false;
     socket.sendBuffer = [];
-    // var display_name = $('#myInput').val();
 
     join({ room: 1234, display: displayName, token: null }); // 이거 같은데?
   });
 
   socket.on('disconnect', () => {
-    setStateOfConnect('disconnected');
-    console.log('socket disconnected');
-    setRoomList('');
-    // $('#room_list').html('');
-    $('#connect').prop('disabled', false);
-    $('#disconnect,  #list_rooms, #leave_all').prop('disabled', true);
-    createRoomButtonRef.current.disabled = true;
     pendingOfferMap.clear();
     removeAllVideoElements();
     closeAllPCs();
@@ -605,13 +186,9 @@ function App() {
   socket.on('leaveAll', ({ data }) => {
     console.log('leaved all rooms', data);
     pendingOfferMap.clear();
-    $('#leave_all').prop('disabled', true);
-    $('#curr_room_name').val('');
 
     removeAllVideoElements();
     closeAllPCs();
-    $('#local_feed').text('');
-    $('#private_id').text('');
     _listRooms();
   });
 
@@ -638,10 +215,6 @@ function App() {
     // 클라에게 joined 전송
     console.log('joined to room ', getDateTime());
     console.log('joined data >>> ', data); // 여기에서 들어오는 display가 John_Doe_랜덤값 이네..
-    $('#local_feed').text(data.feed);
-    $('#private_id').text(data.private_id);
-    $('#curr_room_name').val(data.description);
-    $('#leave_all').prop('disabled', false);
     _listRooms();
 
     setLocalVideoElement(null, null, null, data.room);
@@ -770,7 +343,6 @@ function App() {
       closePC(data.feed);
     }
     if (data.feed === local_feed) {
-      $('#unpublish').text('Publish');
     }
   });
 
@@ -791,8 +363,6 @@ function App() {
     if (data.feed) {
       if (data.who_is_leaving === 'me') {
         removeAllVideoElements();
-        $('#local_feed').text('');
-        $('#private_id').text('');
         closeAllPCs();
       } else {
         removeVideoElementByFeed(data.feed);
@@ -806,12 +376,6 @@ function App() {
     console.log(data);
   });
 
-  socket.on('rooms-list', ({ data }) => {
-    let parsedData = JSON.parse(data);
-    console.log('rooms list123 >>> ', parsedData);
-    setRoomList(parsedData); // 이게 문제였던듯.
-  });
-
   socket.on('created', ({ data }) => {
     console.log('이게 나와야지');
     if (data.room === -1) {
@@ -819,18 +383,9 @@ function App() {
       return;
     } else {
       console.log('room created', data);
-      // $('#new_room_name').val('');
-      setNewRoomName('');
+
       _listRooms();
     }
-  });
-
-  socket.on('destroyed', ({ data }) => {
-    console.log('room destroyed', data);
-    _listRooms();
-    // if (data.room === myRoom) {
-    //   socket.disconnect();
-    // }
   });
 
   socket.on('rtp-fwd-started', ({ data }) => {
@@ -856,15 +411,6 @@ function App() {
   ////////////////////////////////////////////////////////
   // end
   ////////////////////////////////////////////////////////
-
-  async function _restartPublisher(feed) {
-    const offer = await doOffer(feed, null);
-    configure({ feed, jsep: offer, just_configure: false });
-  }
-
-  async function _restartSubscriber(feed) {
-    configure({ feed, restart: true, just_configure: false });
-  }
 
   async function doOffer(feed, display) {
     console.log('doOffer 정의 바로 밑 display >> ', display);
@@ -895,12 +441,9 @@ function App() {
 
       pcMap.set(feed, pc);
       local_feed = feed;
-      local_display = display;
       console.log('pc 추가됨, pcMap >>> ', pcMap);
 
       try {
-        frameRate = parseInt($('#frame_rate').val());
-        console.log('========frame_rate=', $('#frame_rate').val());
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
           video: true,
@@ -1014,7 +557,6 @@ function App() {
     // }
   };
 
-  //--------------
   async function configure_bitrate_audio_video(mode) {
     console.log('================ configure_bitrate_audio_video =============');
 
@@ -1064,7 +606,6 @@ function App() {
             {display}
           </div>
           <video ref={videoRef} width="160" height="120" autoPlay className="localVideoTag" />
-          {/* <img ref={audioBtnRef} className={isAudioOn ? 'audioOn' : 'audioOff'} alt="audio" onClick={() => configure_bitrate_audio_video('audio')} /> */}
           <img ref={audioBtnRef} className={isAudioOn ? 'audioOn' : 'audioOff'} alt="audio" onClick={() => handleToggle('audio')} />
           <img ref={videoBtnRef} className={isVideoOn ? 'videoOn' : 'videoOff'} alt="video" onClick={() => handleToggle('video')} />
         </div>
@@ -1211,29 +752,6 @@ function App() {
     return date_time;
   }
 
-  const joinRoom = (room, description) => {
-    console.log(`Joining room ${room} - ${description}`);
-    if (displayName === '') {
-      alert('참석할 이름을 입력해야 합니다.');
-      return;
-    }
-    join({ room: room, display: displayName, token: null });
-  };
-
-  const destroyRoom = (room, description) => {
-    if (window.confirm(description + ' room을 삭제하겠습니까?')) {
-      _destroy({ room: room, permanent: false, secret: 'adminpwd' });
-    }
-  };
-
-  const handleListRooms = () => {
-    _listRooms();
-  };
-
-  useEffect(() => {
-    _listRooms();
-  }, []);
-
   useEffect(() => {
     const getMediaStream = async () => {
       try {
@@ -1271,21 +789,7 @@ function App() {
     setIsModalVisible,
     socket,
     _listRooms,
-  };
-
-  const RoomItem = ({ room }) => {
-    return (
-      <div key={room.room}>
-        {room.description} ({room.num_participants}/{room.max_publishers})
-        <button className="btn btn-primary btn-xs" onClick={() => joinRoom(room.room, room.description)}>
-          join
-        </button>
-        <button className="btn btn-primary btn-xs" onClick={() => destroyRoom(room.room, room.description)}>
-          destroy
-        </button>
-        <br />
-      </div>
-    );
+    generateRandomNumber,
   };
 
   return (
@@ -1301,77 +805,6 @@ function App() {
                   <div className="card" style={{ backgroundColor: 'rgb(145, 145, 145)' }}>
                     <div className="col-12">
                       <div className="row displayFlex">
-                        <div className="col-6 myInfo">
-                          <div className="myInfoStyle">
-                            <button id="connect" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleConnectValue}>
-                              Connect
-                            </button>
-                            <button id="disconnect" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleDisconnectValue}>
-                              Disconnect
-                            </button>
-                            <div className="btn_between">
-                              <input type="text" className="form-control input-sm" disabled id="connect_status" value={stateOfConnect} />
-                            </div>
-                          </div>
-                          <div className="myInfoStyle">
-                            <div className="btn_between">
-                              <div>참석할 이름</div>
-                            </div>
-                            <div className="btn_between">
-                              <input type="text" className="form-control input-sm myInput" placeholder="참석할 이름" defaultValue={displayName} />
-                            </div>
-                          </div>
-                          <div className="myInfoStyle">
-                            <div className=" btn_between">
-                              <div>비디오 프레임</div>
-                            </div>
-                            <div className="btn_between">
-                              <input type="text" className="form-control input-sm" id="frame_rate" defaultValue="15" />
-                            </div>
-                          </div>
-                          <div className="myInfoStyle">
-                            <div className="btn_between">
-                              <div>현재 방이름</div>
-                            </div>
-                            <div className="btn_between">
-                              <input type="text" className="form-control input-sm" id="curr_room_name" />
-                            </div>
-                            <button id="leave_all" type="button" className="btn btn-primary btn-xs btn_between left_status">
-                              leaveAll
-                            </button>
-                          </div>
-                          <div className="myInfoStyle">
-                            <div className="btn_between">
-                              <input
-                                // id="new_room_name"
-                                className="form-control input-sm"
-                                type="text"
-                                placeholder="new room name"
-                                value={newRoomName}
-                                onChange={(e) => setNewRoomName(e.target.value)}
-                              />
-                            </div>
-                            <button id="create_room" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleCreateRoomClick}>
-                              create_room
-                            </button>
-                          </div>
-                        </div>
-                        <div className="col-6 roomsList">
-                          <button id="list_rooms" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleListRooms}>
-                            list_rooms
-                          </button>
-                          <button id="get_room_id" type="button" className="btn btn-primary btn-xs btn_between">
-                            get_room_id
-                          </button>
-                          <br />
-                          <br />
-                          <div className="roomNameNumber">room이름(현재 참가자수/최대 참가자수)</div>
-                          <div id="room_list" className="btn_between">
-                            {roomList?.map((rooms) => (
-                              <RoomItem key={rooms.room} room={rooms} />
-                            ))}
-                          </div>
-                        </div>
                         <div id="videos" className="displayFlex">
                           <div id="locals"></div>
                           <div id="remotes" className="remotes"></div>

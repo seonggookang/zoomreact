@@ -5,20 +5,6 @@ const RoomsList = () => {
   const { socket, join, display_name, getDateTime, getId, _listRooms, myRoom } = useContext(AppContext);
   const [roomList, setRoomList] = useState([]);
 
-  useEffect(() => {
-    const handleRoomsList = ({ data }) => {
-      let parsedData = JSON.parse(data);
-      console.log('rooms list >>> ', parsedData);
-      setRoomList(parsedData);
-    };
-
-    socket.on('rooms-list', handleRoomsList);
-
-    return () => {
-      socket.off('rooms-list', handleRoomsList);
-    };
-  }, [socket]);
-
   const joinRoom = (room, description) => {
     console.log(`Joining room ${room} - ${description}`);
     if (display_name === '') {
@@ -54,13 +40,55 @@ const RoomsList = () => {
       _id: getId(),
     });
   }
+
   socket.on('destroyed', ({ data }) => {
     console.log('room destroyed', data);
     _listRooms();
   });
+
+  const handleListRooms = () => {
+    _listRooms();
+  };
+
+  const RoomItem = ({ room }) => {
+    return (
+      <div key={room.room}>
+        {room.description} ({room.num_participants}/{room.max_publishers})
+        <button className="btn btn-primary btn-xs" onClick={() => joinRoom(room.room, room.description)}>
+          join
+        </button>
+        <button className="btn btn-primary btn-xs" onClick={() => destroyRoom(room.room, room.description)}>
+          destroy
+        </button>
+        <br />
+      </div>
+    );
+  };
+
+  socket.on('rooms-list', ({ data }) => {
+    let parsedData = JSON.parse(data);
+    console.log('rooms list >>> ', parsedData);
+    setRoomList(parsedData);
+  });
+
+  // useEffect(() => {
+  //   const handleRoomsList = ({ data }) => {
+  //     let parsedData = JSON.parse(data);
+  //     console.log('rooms list >>> ', parsedData);
+  //     setRoomList(parsedData);
+  //   };
+
+  //   socket.on('rooms-list', handleRoomsList);
+
+  //   return () => {
+  //     socket.off('rooms-list', handleRoomsList);
+  //   };
+  // }, [socket]);
+
+  console.log('rooms list', roomList);
   return (
     <div className="col-6 roomsList">
-      <button id="list_rooms" type="button" className="btn btn-primary btn-xs btn_between">
+      <button id="list_rooms" type="button" className="btn btn-primary btn-xs btn_between" onClick={handleListRooms}>
         list_rooms
       </button>
       <button id="get_room_id" type="button" className="btn btn-primary btn-xs btn_between">
@@ -70,17 +98,8 @@ const RoomsList = () => {
       <br />
       <div className="roomNameNumber">room이름(현재 참가자수/최대 참가자수)</div>
       <div id="room_list" className="btn_between">
-        {roomList.map((rooms) => (
-          <div key={rooms.room}>
-            {rooms.description} ({rooms.num_participants}/{rooms.max_publishers})
-            <button className="btn btn-primary btn-xs" onClick={() => joinRoom(rooms.room, rooms.description)}>
-              join
-            </button>
-            <button className="btn btn-primary btn-xs" onClick={() => destroyRoom(rooms.room, rooms.description)}>
-              destroy
-            </button>
-            <br />
-          </div>
+        {roomList?.map((rooms) => (
+          <RoomItem key={rooms.room} room={rooms} />
         ))}
       </div>
     </div>

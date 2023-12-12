@@ -1,7 +1,6 @@
 // ModalComponent.js
-import React, { useEffect, useState, useContext, useRef } from 'react';
+import React, { useEffect, useContext, useRef } from 'react';
 import AppContext from './Appcontext';
-import $ from 'jquery';
 
 const ModalComponent = () => {
   const { displayName, setDisplayName, handleDisplayNameChange, setIsModalVisible, socket, _listRooms } = useContext(AppContext);
@@ -37,14 +36,13 @@ const ModalComponent = () => {
     const randomNumber2 = Math.floor(Math.random() * 1e5)
       .toString()
       .padStart(5, '0');
-    $('#disconnect, #create_room, #list_rooms, #leave_all').prop('disabled', true);
     setDisplayName(randomNumber2);
   }, []);
 
   useEffect(() => {
-    // 컴포넌트가 마운트될 때 input 요소에 포커스를 맞춤.
     inputRef.current.focus();
   }, []);
+
   return (
     <form onSubmit={enterAction}>
       <div className="modal modal-dialog modal-dialog-centered" tabIndex="-1" role="dialog">
