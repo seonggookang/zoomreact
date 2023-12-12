@@ -1007,7 +1007,6 @@ function App() {
   const handleToggle = async (mode) => {
     console.log('================ handleToggle =============');
 
-    setIsVideoOn((prevState) => !prevState);
     await configure_bitrate_audio_video(mode);
     // 여기에서 다시 videoRef를 사용하여 localStream을 갱신합니다.
     if (videoRef.current) {
@@ -1020,6 +1019,7 @@ function App() {
     console.log('================ configure_bitrate_audio_video =============');
 
     if (mode === 'audio') {
+      setIsAudioOn((prevState) => !prevState);
       const audioTrack = localStream.getAudioTracks()[0];
       // 오디오 트랙이 있는지 확인합니다.
       if (audioTrack) {
@@ -1029,6 +1029,7 @@ function App() {
       }
     }
     if (mode === 'video') {
+      setIsVideoOn((prevState) => !prevState);
       const videoTrack = localStream.getVideoTracks()[0];
       // 비디오 트랙이 있는지 확인합니다.
       if (videoTrack) {
@@ -1254,7 +1255,7 @@ function App() {
       videoBtnRef.current.className = isVideoOn ? 'videoOn' : 'videoOff';
     }
     if (audioBtnRef.current) {
-      audioBtnRef.current.className = isVideoOn ? 'videoOn' : 'videoOff';
+      audioBtnRef.current.className = isAudioOn ? 'audioOn' : 'audioOff';
     }
   }, [isVideoOn, isAudioOn]);
 
