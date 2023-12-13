@@ -426,8 +426,6 @@ function App() {
         ],
       });
 
-      // local_pc = pc;
-
       pc.onnegotiationneeded = (event) => console.log('pc.onnegotiationneeded doOffer', event);
       pc.onicecandidate = (event) => trickle({ feed, candidate: event.candidate });
       pc.oniceconnectionstatechange = () => {
@@ -545,8 +543,6 @@ function App() {
     }
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////
-
   const handleToggle = async (mode) => {
     console.log('================ handleToggle =============');
 
@@ -566,7 +562,7 @@ function App() {
       const audioTrack = localStream.getAudioTracks()[0];
       // 오디오 트랙이 있는지 확인합니다.
       if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled; // 이렇게 해도 동작됨
+        audioTrack.enabled = !audioTrack.enabled;
       } else {
         console.log('오디오 트랙을 찾을 수 없습니다.');
       }
@@ -580,7 +576,7 @@ function App() {
       const videoTrack = localStream.getVideoTracks()[0];
       // 비디오 트랙이 있는지 확인합니다.
       if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled; // 이렇게 해도 동작됨
+        videoTrack.enabled = !videoTrack.enabled;
       } else {
         console.log('비디오 트랙을 찾을 수 없습니다.');
       }
@@ -588,7 +584,6 @@ function App() {
   }
 
   function setLocalVideoElement(localStream, feed, display) {
-    // if (room) document.getElementById('videos').getElementsByTagName('span')[0].innerHTML = '   --- VIDEOROOM (' + room + ') ---  ';
     if (!feed) return;
 
     // 최초 렌더링시, video_feed가 없는 상황이라 실행됨
@@ -597,22 +592,23 @@ function App() {
 
       const myVideo = (
         <div id={`video_${feed}`} className="video-view" style={{ position: 'relative' }}>
-          <div
-            style={{
-              color: 'rgb(255, 255, 255)',
-              fontSize: '0.8rem',
-            }}
-          >
-            {display}
+          <div className="localName">{display}</div>
+          <video ref={videoRef} width="160" height="120" autoPlay className="localVideoTag videoShadow" />
+          <div>
+            <img ref={audioBtnRef} className={isAudioOn ? 'audioOn' : 'audioOff'} alt="audio" onClick={() => handleToggle('audio')} />
+            <div id="smallIcon"></div> {/* 작은 버튼들 */}
           </div>
-          <video ref={videoRef} width="160" height="120" autoPlay className="localVideoTag" />
-          <img ref={audioBtnRef} className={isAudioOn ? 'audioOn' : 'audioOff'} alt="audio" onClick={() => handleToggle('audio')} />
-          <img ref={videoBtnRef} className={isVideoOn ? 'videoOn' : 'videoOff'} alt="video" onClick={() => handleToggle('video')} />
+          <div>
+            <img ref={videoBtnRef} className={isVideoOn ? 'videoOn' : 'videoOff'} alt="video" onClick={() => handleToggle('video')} />
+            <div id="smallIcon"></div> {/* 작은 버튼들 */}
+          </div>
         </div>
       );
 
       ReactDOM.render(myVideo, localsContainer);
     } else {
+      // 이건 실행되는걸 못봤는데 언제 되는거지??
+      console.log('누군가 들어왔니?');
       const localVideoContainer = document.getElementById('video_' + feed);
       if (display) {
         const nameElem = localVideoContainer.getElementsByTagName('div')[0];
@@ -636,8 +632,8 @@ function App() {
       const remoteVideoStreamElem = document.createElement('video');
       if (display === 'share') {
         nameElem.innerHTML = '';
-        // remoteVideoStreamElem.width = 1224;  //320
-        // remoteVideoStreamElem.height = 768;  //240
+        // remoteVideoStreamElem.width = 1224; //320
+        // remoteVideoStreamElem.height = 768; //240
         remoteVideoStreamElem.style.cssText = 'width:95%; height: 80%; margin-top: 20px;';
       } else {
         nameElem.innerHTML = display;
@@ -647,7 +643,7 @@ function App() {
       remoteVideoStreamElem.autoplay = true;
       // remoteVideoStreamElem.style.cssText = '-moz-transform: scale(-1, 1); -webkit-transform: scale(-1, 1); -o-transform: scale(-1, 1); transform: scale(-1, 1); filter: FlipH;';
       if (remoteStream) {
-        console.log('======== remoteStream ============', feed);
+        console.log('video_feed가 있을 때 ======== remoteStream ============', feed);
         console.log(remoteStream);
         remoteVideoStreamElem.srcObject = remoteStream;
       }
@@ -675,7 +671,7 @@ function App() {
         }
       }
       if (remoteStream) {
-        console.log('======== remoteStream ============', feed);
+        console.log('video_feed가 없을 때 ======== remoteStream ============', feed);
         console.log(remoteStream);
         const remoteVideoStreamElem = remoteVideoContainer.getElementsByTagName('video')[0];
         remoteVideoStreamElem.srcObject = remoteStream;

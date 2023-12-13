@@ -64,7 +64,13 @@
 .video-view {
   padding: 0 5px 0 5px;
 }
-
+.localName {
+  color: #fff;
+  font-size: 0.8rem;
+}
+.videoShadow {
+  box-shadow: 3px 3px 5px #000000;
+}
 .video-view .video {
   position: absolute;
   width: 100%;
@@ -74,33 +80,53 @@
 }
 .video-view .audioOn {
   position: absolute;
-  bottom: 0px;
-  left: 0px;
+  bottom: 6px;
+  left: 5px;
   cursor: pointer;
-  width: 30%;
+  width: 20%;
   content: url('/image/ui_btn_audioOn.png');
+}
+.audioOn:hover {
+  background-color: rgb(77, 77, 77);
+  border-radius: 50%;
+  opacity: 0.7;
 }
 .video-view .audioOff {
   position: absolute;
-  bottom: 0px;
-  left: 0px;
+  bottom: 6px;
+  left: 5px;
   cursor: pointer;
-  width: 30%;
+  width: 20%;
   content: url('/image/ui_btn_audioOff.png');
+}
+.audioOff:hover {
+  background-color: rgb(77, 77, 77);
+  border-radius: 50%;
+  opacity: 0.7;
 }
 .video-view .videoOn {
   position: absolute;
-  bottom: 0px;
-  right: 0px;
+  bottom: 6px;
+  right: 5px;
   cursor: pointer;
-  width: 30%;
+  width: 20%;
   content: url('/image/ui_btn_videoOn.png');
+}
+.videoOn:hover {
+  background-color: rgb(77, 77, 77);
+  border-radius: 50%;
+  opacity: 0.7;
 }
 .video-view .videoOff {
   position: absolute;
-  bottom: 0px;
-  right: 0px;
+  bottom: 6px;
+  right: 5px;
   cursor: pointer;
-  width: 30%;
+  width: 20%;
   content: url('/image/ui_btn_videoOff.png');
+}
+.videoOff:hover {
+  background-color: rgb(77, 77, 77);
+  border-radius: 50%;
+  opacity: 0.7;
 }
