@@ -1,20 +1,21 @@
 // ModalComponent.js
-import React, { useEffect, useContext, useRef } from 'react';
+import React, { useEffect, useContext, useRef, useState } from 'react';
 import AppContext from './Appcontext';
 
 const ModalComponent = () => {
-  const { displayName, setDisplayName, handleDisplayNameChange, setIsModalVisible, socket, _listRooms } = useContext(AppContext);
+  const { displayName, handleDisplayNameChange, setIsModalVisible, socket, _listRooms } = useContext(AppContext);
   const inputRef = useRef(null);
-
+  const [isEmpty, setIsEmpty] = useState(false);
   const hideModal = () => {
     setIsModalVisible(false);
   };
 
   const enterAction = (event) => {
     event.preventDefault();
+    inputRef.current.focus();
 
     if (!displayName) {
-      alert('이름을 입력해야 합니다.');
+      setIsEmpty(true);
     } else {
       hideModal(false);
       if (socket && !socket.connected) {
@@ -32,12 +33,12 @@ const ModalComponent = () => {
     }
   };
 
-  useEffect(() => {
-    const randomNumber2 = Math.floor(Math.random() * 1e5)
-      .toString()
-      .padStart(5, '0');
-    setDisplayName(randomNumber2);
-  }, []);
+  // useEffect(() => {
+  //   const randomNumber2 = Math.floor(Math.random() * 1e5)
+  //     .toString()
+  //     .padStart(5, '0');
+  //   setDisplayName(randomNumber2);
+  // }, []);
 
   useEffect(() => {
     inputRef.current.focus();
@@ -52,11 +53,11 @@ const ModalComponent = () => {
               <h5 className="modal-title">참석할 이름을 입력하십시오.</h5>
             </div>
             <div className="modal-body">
-              <div id="myMessage" className="myMessage"></div>
+              <div className="myMessage">{isEmpty && '이름을 입력해야 합니다.'}</div>
               <input ref={inputRef} type="text" className="myInput" placeholder="참석할 이름" value={displayName} onChange={handleDisplayNameChange} onKeyPress={handleKeyPress} />
             </div>
             <div className="modal-footer">
-              <button type="submit" id="enterRoom" className="btn btn-primary">
+              <button type="submit" className="btn btn-primary">
                 입장
               </button>
             </div>
