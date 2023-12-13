@@ -14,6 +14,10 @@ function App() {
   const videoRef = useRef(null);
   const audioBtnRef = useRef(null);
   const videoBtnRef = useRef(null);
+  const remoteVideoRef = useRef(null);
+
+  const [users, setUsers] = useState([]);
+
   const randName = 'John_Doe_' + Math.floor(10000 * Math.random());
   const myName = getURLParameter('name') || randName;
   let myRoom = getURLParameter('room') ? parseInt(getURLParameter('room')) : getURLParameter('room_str') || 1234;
@@ -355,22 +359,6 @@ function App() {
     _listRooms();
   });
 
-  socket.on('leaving111', ({ data }) => {
-    console.log('feed leaving', getDateTime());
-    console.log(data);
-    _listRooms();
-
-    if (data.feed) {
-      if (data.who_is_leaving === 'me') {
-        removeAllVideoElements();
-        closeAllPCs();
-      } else {
-        removeVideoElementByFeed(data.feed);
-        closePC(data.feed);
-      }
-    }
-  });
-
   socket.on('exists', ({ data }) => {
     console.log('room exists ', getDateTime());
     console.log(data);
@@ -518,6 +506,7 @@ function App() {
         };
 
         const remoteStream = event.streams[0];
+        console.log('remoteStream >>> ', remoteStream);
         setRemoteVideoElement(remoteStream, feed, display); // display: 상대의 이름이 뜨는곳
       };
 
@@ -591,8 +580,8 @@ function App() {
       const localsContainer = document.getElementById('locals');
 
       const myVideo = (
-        <div id={`video_${feed}`} className="video-view" style={{ position: 'relative' }}>
-          <div className="localName">{display}</div>
+        <div id={`video_${feed}`} className="video-view">
+          <div className="nameStyle">{display}</div>
           <video ref={videoRef} width="160" height="120" autoPlay className="localVideoTag videoShadow" />
           <div>
             <img ref={audioBtnRef} className={isAudioOn ? 'audioOn' : 'audioOff'} alt="audio" onClick={() => handleToggle('audio')} />
@@ -621,31 +610,36 @@ function App() {
     }
   }
 
+  const handleAddUser = (feed) => {
+    const newUser = {
+      feed,
+    };
+
+    setUsers([...users, newUser]);
+  };
+  // handleAddUser();
+  console.log('users >>> ', users);
   function setRemoteVideoElement(remoteStream, feed, display) {
+    handleAddUser(feed);
     if (!feed) return;
 
     if (!document.getElementById('video_' + feed)) {
+      //////////////////////   바닐라   ////////////////////
       const nameElem = document.createElement('div');
       nameElem.style.display = 'table';
       nameElem.style.cssText = 'color: #fff; font-size: 0.8rem;';
+      nameElem.innerHTML = display;
 
       const remoteVideoStreamElem = document.createElement('video');
-      if (display === 'share') {
-        nameElem.innerHTML = '';
-        // remoteVideoStreamElem.width = 1224; //320
-        // remoteVideoStreamElem.height = 768; //240
-        remoteVideoStreamElem.style.cssText = 'width:95%; height: 80%; margin-top: 20px;';
-      } else {
-        nameElem.innerHTML = display;
-        remoteVideoStreamElem.width = 160;
-        remoteVideoStreamElem.height = 120;
-      }
+      remoteVideoStreamElem.width = 160;
+      remoteVideoStreamElem.height = 120;
       remoteVideoStreamElem.autoplay = true;
-      // remoteVideoStreamElem.style.cssText = '-moz-transform: scale(-1, 1); -webkit-transform: scale(-1, 1); -o-transform: scale(-1, 1); transform: scale(-1, 1); filter: FlipH;';
-      if (remoteStream) {
+
+      if (remoteStream && remoteVideoRef.current) {
         console.log('video_feed가 있을 때 ======== remoteStream ============', feed);
         console.log(remoteStream);
         remoteVideoStreamElem.srcObject = remoteStream;
+        // remoteVideoRef.current.srcObject = remoteStream; // 이게 어딘가에 써져야 되는디..
       }
 
       // 요기에서 외부에서 들어온 2번 user가 보이는거임
@@ -654,21 +648,34 @@ function App() {
       remoteVideoContainer.id = 'video_' + feed;
       remoteVideoContainer.appendChild(nameElem);
       remoteVideoContainer.appendChild(remoteVideoStreamElem);
+      document.getElementById('remotes').appendChild(remoteVideoContainer);
 
-      if (display === 'share') {
-        document.getElementById('screen').appendChild(remoteVideoContainer);
-      } else {
-        document.getElementById('remotes').appendChild(remoteVideoContainer);
-      }
+      //////////////////  리액트  //////////////////////////////
+
+      const remoteVideoContainer2 = document.getElementById('remotes');
+
+      const yourVideo = (
+        // users로 묶어서 map을 돌린다?
+
+        <div key={feed} id={`video_${feed}`} className="video-view remoteVideo">
+          <div className="nameStyle">{display}</div>
+          <video ref={remoteVideoRef} width="160" height="120" autoPlay /> {/* ref만 건들면 됨. */}
+        </div>
+      );
+
+      // 새로운 변수 allVideos에다가 yourVideo들을 누적해간다음,
+      // ReactDOM.render(allVideos, remoteVideoContainer2); 이렇게 하면 되겠네?
+
+      // ReactDOM.render(yourVideo, remoteVideoContainer2); // 새로운 해당 컨테이너에 새로운 컴포넌트로 완전히 교체됨.
+      // 기존 렌더링된 컴포넌트는 삭제되고 새로운 컴포넌트로 대체됨.
+      // 해결 -> ReactDOM.render를 한 번만 호출하고, 이후에는 ReactDOM.createRoot와 render를 사용하여 업데이트를 수행해야 합니다.
+
+      ////////////////////////////////////////////////
     } else {
       const remoteVideoContainer = document.getElementById('video_' + feed);
       if (display) {
         const nameElem = remoteVideoContainer.getElementsByTagName('div')[0];
-        if (display === 'share') {
-          nameElem.innerHTML = '';
-        } else {
-          nameElem.innerHTML = display;
-        }
+        nameElem.innerHTML = display;
       }
       if (remoteStream) {
         console.log('video_feed가 없을 때 ======== remoteStream ============', feed);
@@ -699,7 +706,7 @@ function App() {
     for (let i = 0; localVideoContainers && i < localVideoContainers.length; i++) removeVideoElement(localVideoContainers[i]);
     while (locals.firstChild) locals.removeChild(locals.firstChild);
 
-    var remotes = document.getElementById('remotes');
+    let remotes = document.getElementById('remotes');
     const remoteVideoContainers = remotes.getElementsByTagName('div');
     for (let i = 0; remoteVideoContainers && i < remoteVideoContainers.length; i++) removeVideoElement(remoteVideoContainers[i]);
     while (remotes.firstChild) remotes.removeChild(remotes.firstChild);
@@ -770,6 +777,11 @@ function App() {
   }, [localStream]);
 
   useEffect(() => {
+    if (!remoteVideoRef.current) return;
+    remoteVideoRef.current.srcObject = localStream; // 이거로 인해 화면이 나오긴했다.
+  }, [localStream]);
+
+  useEffect(() => {
     if (videoBtnRef.current) {
       videoBtnRef.current.className = isVideoOn ? 'videoOn' : 'videoOff';
     }
@@ -803,7 +815,15 @@ function App() {
                       <div className="row displayFlex">
                         <div id="videos" className="displayFlex">
                           <div id="locals"></div>
-                          <div id="remotes" className="remotes"></div>
+
+                          <div id="remotes" className="remotes">
+                            {/* {users.map(({ feed, display }) => (
+                              <div key={feed} id={`video_${feed}`} className="video-view remoteVideo">
+                                <div className="nameStyle">{display}</div>
+                                <video width="160" height="120" autoPlay />
+                              </div>
+                            ))} */}
+                          </div>
                         </div>
                       </div>
                     </div>

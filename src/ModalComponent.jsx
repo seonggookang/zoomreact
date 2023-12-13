@@ -33,13 +33,6 @@ const ModalComponent = () => {
     }
   };
 
-  // useEffect(() => {
-  //   const randomNumber2 = Math.floor(Math.random() * 1e5)
-  //     .toString()
-  //     .padStart(5, '0');
-  //   setDisplayName(randomNumber2);
-  // }, []);
-
   useEffect(() => {
     inputRef.current.focus();
   }, []);

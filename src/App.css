@@ -62,12 +62,20 @@
   margin-right: 0px;
 }
 .video-view {
-  padding: 0 5px 0 5px;
+  padding: 0 5px;
+  position: relative;
 }
-.localName {
+
+.nameStyle {
+  display: table;
   color: #fff;
   font-size: 0.8rem;
 }
+
+.remoteVideo {
+  padding: 0 5px;
+}
+
 .videoShadow {
   box-shadow: 3px 3px 5px #000000;
 }
