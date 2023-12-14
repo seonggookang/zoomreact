@@ -12,7 +12,6 @@ function App() {
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const videoRef = useRef(null);
-  const audioRef = useRef(null);
   const audioBtnRef = useRef(null);
   const videoBtnRef = useRef(null);
 
@@ -529,12 +528,7 @@ function App() {
 
   const handleToggle = async (mode) => {
     console.log('================ handleToggle =============');
-
     await configure_bitrate_audio_video(mode);
-    // 여기에서 다시 videoRef를 사용하여 localStream을 갱신합니다.
-    // if (videoRef.current) { 여따 두던걸 video 분기 안으로 넣으니까 음성버튼 클릭할때는 깜빡임 사라짐. 하지만 화면 누를땐 여전히 깜빡거림.
-    //   videoRef.current.srcObject = localStream;
-    // }
   };
 
   async function configure_bitrate_audio_video(mode) {
@@ -542,9 +536,6 @@ function App() {
 
     if (mode === 'audio') {
       console.log('audio 버튼 클릭');
-      if (audioRef.current) {
-        audioRef.current.srcObject = localStream;
-      }
       setIsAudioOn((prevState) => !prevState);
       const audioTrack = localStream.getAudioTracks()[0];
       // 오디오 트랙이 있는지 확인합니다.
@@ -736,7 +727,7 @@ function App() {
 
   useEffect(() => {
     if (!videoRef.current) return;
-    videoRef.current.srcObject = localStream; // 이거로 인해 화면이 나오긴했다.
+    videoRef.current.srcObject = localStream;
   }, [localStream]);
 
   useEffect(() => {
