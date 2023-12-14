@@ -12,11 +12,9 @@ function App() {
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const videoRef = useRef(null);
+  const audioRef = useRef(null);
   const audioBtnRef = useRef(null);
   const videoBtnRef = useRef(null);
-  const remoteVideoRef = useRef(null);
-
-  const [users, setUsers] = useState([]);
 
   const randName = 'John_Doe_' + Math.floor(10000 * Math.random());
   const myName = getURLParameter('name') || randName;
@@ -437,14 +435,11 @@ function App() {
 
         setLocalStream(stream);
 
-        console.log('localStream >>> ', localStream);
-
         localStream.getTracks().forEach((track) => {
           pc.addTrack(track, localStream);
           console.log('adding track >>> ', track, track.kind);
         });
-        console.log('display !! ', display); // 랜덤값..
-        setLocalVideoElement(localStream, feed, display); // 여기의 display가 잘 들어와야 로컬 비디오 위에 이름이 잘 뜸
+        setLocalVideoElement(localStream, feed, display);
       } catch (e) {
         console.log('error while doing offer', e);
         removeVideoElementByFeed(feed);
@@ -547,6 +542,9 @@ function App() {
 
     if (mode === 'audio') {
       console.log('audio 버튼 클릭');
+      if (audioRef.current) {
+        audioRef.current.srcObject = localStream;
+      }
       setIsAudioOn((prevState) => !prevState);
       const audioTrack = localStream.getAudioTracks()[0];
       // 오디오 트랙이 있는지 확인합니다.
@@ -585,11 +583,9 @@ function App() {
           <video ref={videoRef} width="160" height="120" autoPlay className="localVideoTag videoShadow" />
           <div>
             <img ref={audioBtnRef} className={isAudioOn ? 'audioOn' : 'audioOff'} alt="audio" onClick={() => handleToggle('audio')} />
-            <div id="smallIcon"></div> {/* 작은 버튼들 */}
           </div>
           <div>
             <img ref={videoBtnRef} className={isVideoOn ? 'videoOn' : 'videoOff'} alt="video" onClick={() => handleToggle('video')} />
-            <div id="smallIcon"></div> {/* 작은 버튼들 */}
           </div>
         </div>
       );
@@ -610,23 +606,13 @@ function App() {
     }
   }
 
-  const handleAddUser = (feed) => {
-    const newUser = {
-      feed,
-    };
-
-    setUsers([...users, newUser]);
-  };
-  // handleAddUser();
-  console.log('users >>> ', users);
   function setRemoteVideoElement(remoteStream, feed, display) {
-    handleAddUser(feed);
     if (!feed) return;
 
     if (!document.getElementById('video_' + feed)) {
       //////////////////////   바닐라   ////////////////////
       const nameElem = document.createElement('div');
-      nameElem.style.display = 'table';
+      nameElem.classList.add('nameStyle');
       nameElem.style.cssText = 'color: #fff; font-size: 0.8rem;';
       nameElem.innerHTML = display;
 
@@ -635,11 +621,10 @@ function App() {
       remoteVideoStreamElem.height = 120;
       remoteVideoStreamElem.autoplay = true;
 
-      if (remoteStream && remoteVideoRef.current) {
+      if (remoteStream) {
         console.log('video_feed가 있을 때 ======== remoteStream ============', feed);
         console.log(remoteStream);
         remoteVideoStreamElem.srcObject = remoteStream;
-        // remoteVideoRef.current.srcObject = remoteStream; // 이게 어딘가에 써져야 되는디..
       }
 
       // 요기에서 외부에서 들어온 2번 user가 보이는거임
@@ -649,28 +634,6 @@ function App() {
       remoteVideoContainer.appendChild(nameElem);
       remoteVideoContainer.appendChild(remoteVideoStreamElem);
       document.getElementById('remotes').appendChild(remoteVideoContainer);
-
-      //////////////////  리액트  //////////////////////////////
-
-      const remoteVideoContainer2 = document.getElementById('remotes');
-
-      const yourVideo = (
-        // users로 묶어서 map을 돌린다?
-
-        <div key={feed} id={`video_${feed}`} className="video-view remoteVideo">
-          <div className="nameStyle">{display}</div>
-          <video ref={remoteVideoRef} width="160" height="120" autoPlay /> {/* ref만 건들면 됨. */}
-        </div>
-      );
-
-      // 새로운 변수 allVideos에다가 yourVideo들을 누적해간다음,
-      // ReactDOM.render(allVideos, remoteVideoContainer2); 이렇게 하면 되겠네?
-
-      // ReactDOM.render(yourVideo, remoteVideoContainer2); // 새로운 해당 컨테이너에 새로운 컴포넌트로 완전히 교체됨.
-      // 기존 렌더링된 컴포넌트는 삭제되고 새로운 컴포넌트로 대체됨.
-      // 해결 -> ReactDOM.render를 한 번만 호출하고, 이후에는 ReactDOM.createRoot와 render를 사용하여 업데이트를 수행해야 합니다.
-
-      ////////////////////////////////////////////////
     } else {
       const remoteVideoContainer = document.getElementById('video_' + feed);
       if (display) {
@@ -777,11 +740,6 @@ function App() {
   }, [localStream]);
 
   useEffect(() => {
-    if (!remoteVideoRef.current) return;
-    remoteVideoRef.current.srcObject = localStream; // 이거로 인해 화면이 나오긴했다.
-  }, [localStream]);
-
-  useEffect(() => {
     if (videoBtnRef.current) {
       videoBtnRef.current.className = isVideoOn ? 'videoOn' : 'videoOff';
     }
@@ -815,15 +773,7 @@ function App() {
                       <div className="row displayFlex">
                         <div id="videos" className="displayFlex">
                           <div id="locals"></div>
-
-                          <div id="remotes" className="remotes">
-                            {/* {users.map(({ feed, display }) => (
-                              <div key={feed} id={`video_${feed}`} className="video-view remoteVideo">
-                                <div className="nameStyle">{display}</div>
-                                <video width="160" height="120" autoPlay />
-                              </div>
-                            ))} */}
-                          </div>
+                          <div id="remotes" className="remotes"></div>
                         </div>
                       </div>
                     </div>
