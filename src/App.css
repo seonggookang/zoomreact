@@ -29,7 +29,14 @@
   width: 50%;
   border: 1px solid #999;
 }
+.localVideoTag {
+  opacity: 1;
+  transition: opacity 2.5s;
+}
 
+.localVideoTag.videoOff {
+  opacity: 0;
+}
 .roomNameNumber {
   font-size: 0.6em;
   font-weight: bold;

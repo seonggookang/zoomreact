@@ -1,4 +1,3 @@
-// ModalComponent.js
 import React, { useEffect, useContext, useRef, useState } from 'react';
 import AppContext from './Appcontext';
 
@@ -47,7 +46,7 @@ const ModalComponent = () => {
             </div>
             <div className="modal-body">
               <div className="myMessage">{isEmpty && '이름을 입력해야 합니다.'}</div>
-              <input ref={inputRef} type="text" className="myInput" placeholder="참석할 이름" value={displayName} onChange={handleDisplayNameChange} onKeyPress={handleKeyPress} />
+              <input ref={inputRef} type="text" className="myInput" placeholder="참석할 이름" value={displayName} onChange={handleDisplayNameChange} onKeyDown={handleKeyPress} />
             </div>
             <div className="modal-footer">
               <button type="submit" className="btn btn-primary">

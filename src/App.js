@@ -1,6 +1,6 @@
 import './App.css';
 import ModalComponent from './ModalComponent';
-import { useState, useRef, useEffect, React } from 'react';
+import { useState, useRef, useEffect, React, useLayoutEffect } from 'react';
 import AppContext from './Appcontext';
 import io from 'socket.io-client';
 import ReactDOM from 'react-dom';
@@ -14,7 +14,6 @@ function App() {
   const videoRef = useRef(null);
   const audioBtnRef = useRef(null);
   const videoBtnRef = useRef(null);
-
   const randName = 'John_Doe_' + Math.floor(10000 * Math.random());
   const myName = getURLParameter('name') || randName;
   let myRoom = getURLParameter('room') ? parseInt(getURLParameter('room')) : getURLParameter('room_str') || 1234;
@@ -432,7 +431,7 @@ function App() {
           video: true,
         });
 
-        setLocalStream(stream);
+        setLocalStream(stream); // useEffect 없으면 화면 안 그려짐. 화면로고를 클릭하고 난뒤에 렌더링.
 
         localStream.getTracks().forEach((track) => {
           pc.addTrack(track, localStream);
@@ -548,7 +547,7 @@ function App() {
     if (mode === 'video') {
       console.log('video 버튼 클릭');
       if (videoRef.current) {
-        videoRef.current.srcObject = localStream;
+        videoRef.current.srcObject = localStream; // 유저들의 화면토글 O, 로컬화면 토글 X
       }
       setIsVideoOn((prevState) => !prevState);
       const videoTrack = localStream.getVideoTracks()[0];
@@ -722,7 +721,7 @@ function App() {
       }
     };
 
-    getMediaStream();
+    getMediaStream(); // 없으면 내 로컬 안그려짐
   }, []);
 
   useEffect(() => {
@@ -732,7 +731,7 @@ function App() {
 
   useEffect(() => {
     if (videoBtnRef.current) {
-      videoBtnRef.current.className = isVideoOn ? 'videoOn' : 'videoOff';
+      videoBtnRef.current.className = isVideoOn ? 'videoOn' : 'videoOff'; // 화면로고 토글 시키기위해
     }
     if (audioBtnRef.current) {
       audioBtnRef.current.className = isAudioOn ? 'audioOn' : 'audioOff';
