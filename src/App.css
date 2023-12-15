@@ -2,6 +2,10 @@
   text-align: center;
 }
 
+.row {
+  display: flex;
+}
+
 .displayNone {
   display: none;
 }
@@ -10,7 +14,7 @@
   display: flex;
 }
 
-.flexPaddingTop5 {
+.myInfoStyle {
   display: flex;
   padding-top: 5px;
 }
@@ -19,25 +23,23 @@
   font-size: 16px;
 }
 
-.borderGapColor {
-  border: 2px;
-  border-color: blueviolet;
-}
-
 .myInfo,
 .roomsList {
   padding: 5px 5px;
   width: 50%;
   border: 1px solid #999;
 }
+.localVideoTag {
+  opacity: 1;
+  transition: opacity 2.5s;
+}
 
+.localVideoTag.videoOff {
+  opacity: 0;
+}
 .roomNameNumber {
   font-size: 0.6em;
   font-weight: bold;
-}
-
-.videos {
-  margin-left: 15px;
 }
 
 .remotes {
@@ -45,7 +47,6 @@
   justify-content: safe center;
   overflow-x: auto;
 }
-
 .screen {
   text-align: center;
 }
@@ -61,4 +62,86 @@
 
 .myInput {
   width: 100%;
+}
+
+.btn_between {
+  justify-content: space-between;
+  margin-right: 0px;
+}
+.video-view {
+  padding: 0 5px;
+  position: relative;
+}
+
+.nameStyle {
+  display: table;
+  color: #fff;
+  font-size: 0.8rem;
+}
+
+.remoteVideo {
+  padding: 0 5px;
+}
+
+.videoShadow {
+  box-shadow: 3px 3px 5px #000000;
+}
+.video-view .video {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-color: #ccc;
+}
+.video-view .audioOn {
+  position: absolute;
+  bottom: 6px;
+  left: 5px;
+  cursor: pointer;
+  width: 20%;
+  content: url('/image/ui_btn_audioOn.png');
+}
+.audioOn:hover {
+  background-color: rgb(77, 77, 77);
+  border-radius: 50%;
+  opacity: 0.7;
+}
+.video-view .audioOff {
+  position: absolute;
+  bottom: 6px;
+  left: 5px;
+  cursor: pointer;
+  width: 20%;
+  content: url('/image/ui_btn_audioOff.png');
+}
+.audioOff:hover {
+  background-color: rgb(77, 77, 77);
+  border-radius: 50%;
+  opacity: 0.7;
+}
+.video-view .videoOn {
+  position: absolute;
+  bottom: 6px;
+  right: 5px;
+  cursor: pointer;
+  width: 20%;
+  content: url('/image/ui_btn_videoOn.png');
+}
+.videoOn:hover {
+  background-color: rgb(77, 77, 77);
+  border-radius: 50%;
+  opacity: 0.7;
+}
+.video-view .videoOff {
+  position: absolute;
+  bottom: 6px;
+  right: 5px;
+  cursor: pointer;
+  width: 20%;
+  content: url('/image/ui_btn_videoOff.png');
+}
+.videoOff:hover {
+  background-color: rgb(77, 77, 77);
+  border-radius: 50%;
+  opacity: 0.7;
 }

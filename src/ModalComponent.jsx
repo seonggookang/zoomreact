@@ -1,33 +1,42 @@
-// ModalComponent.js
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useContext, useRef, useState } from 'react';
 import AppContext from './Appcontext';
-import $ from 'jquery';
 
 const ModalComponent = () => {
-  const [isModalVisible, setIsModalVisible] = useState(true);
-  const { displayName, setDisplayName, handleDisplayNameChange } = useContext(AppContext);
-
+  const { displayName, handleDisplayNameChange, setIsModalVisible, socket, _listRooms } = useContext(AppContext);
+  const inputRef = useRef(null);
+  const [isEmpty, setIsEmpty] = useState(false);
   const hideModal = () => {
     setIsModalVisible(false);
   };
 
-  const enterAction = () => {
+  const enterAction = (event) => {
+    event.preventDefault();
+    inputRef.current.focus();
+
     if (!displayName) {
-      alert('이름을 입력해야 합니다.');
+      setIsEmpty(true);
     } else {
       hideModal(false);
+      if (socket && !socket.connected) {
+        socket.connect();
+        _listRooms();
+      } else {
+        alert('already connected!');
+      }
+    }
+  };
+
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      enterAction(event);
     }
   };
 
   useEffect(() => {
-    const randomNumber2 = Math.floor(Math.random() * 1e5)
-      .toString()
-      .padStart(5, '0');
-    $('#disconnect, #create_room, #list_rooms, #leave_all').prop('disabled', true);
-    setDisplayName(randomNumber2);
+    inputRef.current.focus();
   }, []);
 
-  return isModalVisible ? (
+  return (
     <form onSubmit={enterAction}>
       <div className="modal modal-dialog modal-dialog-centered" tabIndex="-1" role="dialog">
         <div className="modal-dialog" role="document">
@@ -36,11 +45,11 @@ const ModalComponent = () => {
               <h5 className="modal-title">참석할 이름을 입력하십시오.</h5>
             </div>
             <div className="modal-body">
-              <div id="myMessage" className="myMessage"></div>
-              <input type="text" className="myInput" placeholder="참석할 이름" value={displayName} onChange={handleDisplayNameChange} />
+              <div className="myMessage">{isEmpty && '이름을 입력해야 합니다.'}</div>
+              <input ref={inputRef} type="text" className="myInput" placeholder="참석할 이름" value={displayName} onChange={handleDisplayNameChange} onKeyDown={handleKeyPress} />
             </div>
             <div className="modal-footer">
-              <button type="button" id="enterRoom" className="btn btn-primary" onClick={enterAction}>
+              <button type="submit" className="btn btn-primary">
                 입장
               </button>
             </div>
@@ -48,7 +57,7 @@ const ModalComponent = () => {
         </div>
       </div>
     </form>
-  ) : null;
+  );
 };
 
 export default ModalComponent;
