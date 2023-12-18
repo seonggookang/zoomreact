@@ -5,36 +5,6 @@ import AppContext from './Appcontext';
 import io from 'socket.io-client';
 import ReactDOM from 'react-dom';
 
-const SetRemoteVideoElement = ({ remoteStream, feed, display }) => {
-  const [videoSrcObject, setVideoSrcObject] = useState(null);
-
-  useEffect(() => {
-    if (remoteStream) {
-      console.log('video_feed가 있을 때 ======== remoteStream ============', feed);
-      console.log(remoteStream);
-      setVideoSrcObject(remoteStream);
-    }
-  }, [remoteStream, feed]);
-
-  return (
-    <div style={{ padding: '0 5px 0 5px' }}>
-      {display && (
-        <div className="nameStyle" style={{ color: '#fff', fontSize: '0.8rem' }}>
-          {display}
-        </div>
-      )}
-      <video
-        width={160}
-        height={120}
-        autoPlay
-        ref={(video) => {
-          video.srcObject = videoSrcObject;
-        }}
-      />
-    </div>
-  );
-};
-
 function App() {
   const [displayName, setDisplayName] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(true);
@@ -47,12 +17,6 @@ function App() {
   const randName = 'John_Doe_' + Math.floor(10000 * Math.random());
   const myName = getURLParameter('name') || randName;
   let myRoom = getURLParameter('room') ? parseInt(getURLParameter('room')) : getURLParameter('room_str') || 1234;
-
-  const [remotes, setRemotes] = useState([]);
-
-  const addRemote = (feed, display, remoteStream) => {
-    setRemotes((prevRemotes) => [...prevRemotes, { feed, display, remoteStream }]);
-  };
 
   const pcMap = new Map();
   let pendingOfferMap = new Map(); // 존재 이유는?
@@ -334,9 +298,7 @@ function App() {
   socket.on('display', ({ data }) => {
     console.log('feed changed display name ', getDateTime());
     console.log(data);
-    RemoteVideoElement(null, data.feed, data.display); // 이걸 할 때마다 새로 생성.
-    // setRemotes(); // 여기서 remotes의 배열을 받아와서 맨 아래 return 안에서 map을 돌리는거야. 그럼 전부 돌아가겠찌
-    // 그럼 setRemotes는 SetRemoteVideoElement 함수 안에서 돌리면 될거같은데?
+    setRemoteVideoElement(null, data.feed, data.display);
   });
 
   socket.on('started', ({ data }) => {
@@ -352,7 +314,7 @@ function App() {
   socket.on('switched', ({ data }) => {
     console.log(`feed switched from ${data.from_feed} to ${data.to_feed} (${data.display})`);
     /* !!! This will actually break the DOM management since IDs are feed based !!! */
-    RemoteVideoElement(null, data.from_feed, data.display); // 이걸 할 때마다 새로 생성.
+    setRemoteVideoElement(null, data.from_feed, data.display);
   });
 
   // 2번이 들어오면 제일 먼저 콘솔 찍히는 부분.
@@ -538,8 +500,7 @@ function App() {
 
         const remoteStream = event.streams[0];
         console.log('remoteStream >>> ', remoteStream);
-        addRemote(feed, display, remoteStream);
-        // RemoteVideoElement(remoteStream, feed, display); // display: 상대의 이름이 뜨는곳
+        setRemoteVideoElement(remoteStream, feed, display); // display: 상대의 이름이 뜨는곳
       };
 
       pcMap.set(feed, pc);
@@ -621,6 +582,8 @@ function App() {
 
       ReactDOM.render(myVideo, localsContainer);
     } else {
+      // 이건 실행되는걸 못봤는데 언제 되는거지??
+      console.log('누군가 들어왔니?');
       const localVideoContainer = document.getElementById('video_' + feed);
       if (display) {
         const nameElem = localVideoContainer.getElementsByTagName('div')[0];
@@ -636,7 +599,7 @@ function App() {
   function setRemoteVideoElement(remoteStream, feed, display) {
     if (!feed) return;
 
-    if (!document.getElementById(`video_${feed}`)) {
+    if (!document.getElementById('video_' + feed)) {
       //////////////////////   바닐라   ////////////////////
       const nameElem = document.createElement('div');
       nameElem.classList.add('nameStyle');
@@ -692,24 +655,15 @@ function App() {
 
   function removeAllVideoElements() {
     const locals = document.getElementById('locals');
+    const localVideoContainers = locals.getElementsByTagName('div');
+    for (let i = 0; localVideoContainers && i < localVideoContainers.length; i++) removeVideoElement(localVideoContainers[i]);
+    while (locals.firstChild) locals.removeChild(locals.firstChild);
+
     let remotes = document.getElementById('remotes');
-
-    removeChildNodes(locals);
-    removeChildNodes(remotes);
-
-    function removeChildNodes(parentNode) {
-      while (parentNode.firstChild) {
-        parentNode.removeChild(parentNode.firstChild);
-      }
-    }
-
-    // const localVideoContainers = locals.getElementsByTagName('div');
-    // for (let i = 0; localVideoContainers && i < localVideoContainers.length; i++) removeVideoElement(localVideoContainers[i]);
-    // while (locals.firstChild) locals.removeChild(locals.firstChild);
-
-    // const remoteVideoContainers = remotes.getElementsByTagName('div');
-    // for (let i = 0; remoteVideoContainers && i < remoteVideoContainers.length; i++) removeVideoElement(remoteVideoContainers[i]);
-    // while (remotes.firstChild) remotes.removeChild(remotes.firstChild);
+    const remoteVideoContainers = remotes.getElementsByTagName('div');
+    for (let i = 0; remoteVideoContainers && i < remoteVideoContainers.length; i++) removeVideoElement(remoteVideoContainers[i]);
+    while (remotes.firstChild) remotes.removeChild(remotes.firstChild);
+    document.getElementById('videos').getElementsByTagName('span')[0].innerHTML = '   --- VIDEOROOM () ---  ';
   }
 
   function closePC(feed) {
@@ -752,42 +706,6 @@ function App() {
     var time = today.getHours() + ':' + today.getMinutes() + ':' + today.getSeconds() + ':' + today.getMilliseconds();
     var date_time = date + ' ' + time;
     return date_time;
-  }
-
-  function RemoteVideoElement({ remoteStream, feed, display }) {
-    const remoteVideoRef = useRef(null);
-
-    useEffect(() => {
-      const renderRemoteVideoElement = () => {
-        if (!document.getElementById(`video_${feed}`)) {
-          const remoteVideoContainer = (
-            <div style={{ padding: '0 5px 0 5px' }} id={`video_${feed}`}>
-              <div className="nameStyle" style={{ color: '#fff', fontSize: '0.8rem' }}>
-                {display}
-              </div>
-              <video ref={remoteVideoRef} width={160} height={120} autoPlay style={{ width: '100%' }} />
-            </div>
-          );
-
-          // document.getElementById('remotes').appendChild(remoteVideoContainer);
-          ReactDOM.render(remoteVideoContainer, document.getElementById('remotes'));
-        } else {
-          const remoteVideoContainer = document.getElementById(`video_${feed}`);
-          if (display) {
-            const nameElem = remoteVideoContainer.querySelector('.nameStyle');
-            nameElem.innerHTML = display;
-          }
-          if (remoteStream) {
-            const remoteVideoStreamElem = remoteVideoContainer.querySelector('video');
-            remoteVideoStreamElem.srcObject = remoteStream;
-          }
-        }
-      };
-
-      renderRemoteVideoElement();
-    }, [remoteStream, feed, display]);
-
-    return <div ref={remoteVideoRef} />;
   }
 
   useEffect(() => {
@@ -845,11 +763,7 @@ function App() {
                       <div className="row displayFlex">
                         <div id="videos" className="displayFlex">
                           <div id="locals"></div>
-                          <div id="remotes" className="remotes">
-                            {remotes.map((remote) => (
-                              <RemoteVideoElement key={remote.feed} remoteStream={remote.remoteStream} feed={remote.feed} display={remote.display} />
-                            ))}
-                          </div>
+                          <div id="remotes" className="remotes"></div>
                         </div>
                       </div>
                     </div>
