@@ -1,6 +1,6 @@
 import './App.css';
 import ModalComponent from './ModalComponent';
-import { useState, useRef, useEffect, React, useLayoutEffect } from 'react';
+import { useState, useRef, useEffect, React } from 'react';
 import AppContext from './Appcontext';
 import io from 'socket.io-client';
 import ReactDOM from 'react-dom';
